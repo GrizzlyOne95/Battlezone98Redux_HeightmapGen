@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from bzr_heightmap import GeneratorSettings, HG2Map, RECIPES, describe_heightmap, generate, make_preview, terrain_metrics
+from bzr_heightmap import GeneratorSettings, HG2Map, RECIPES, describe_heightmap, generate, make_preview, resolve_seed, terrain_metrics
 
 
 def cli() -> int:
@@ -12,7 +12,7 @@ def cli() -> int:
     parser.add_argument("--gui", action="store_true", help="open the Tkinter editor")
     parser.add_argument("--style", choices=list(RECIPES), default="Terraced Labyrinth")
     parser.add_argument("--zones", default="3x3", help="zone dimensions, e.g. 3x3 or 4x5")
-    parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument("--seed", default="random", help="integer seed for reproducibility, or 'random' (default)")
     parser.add_argument("--relief", type=float, default=1.0)
     parser.add_argument("--naturalization", type=float, default=0.65)
     parser.add_argument("--detail", type=float, default=0.55)
@@ -51,10 +51,15 @@ def cli() -> int:
     except Exception as exc:
         raise SystemExit("--zones must be formatted like 3x3") from exc
 
+    try:
+        resolved_seed = resolve_seed(args.seed)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+
     settings = GeneratorSettings(
         zones_x=zones_x,
         zones_z=zones_z,
-        seed=args.seed,
+        seed=resolved_seed,
         relief=args.relief,
         naturalization=args.naturalization,
         detail=args.detail,
@@ -73,7 +78,7 @@ def cli() -> int:
 
     metrics = terrain_metrics(terrain.heights)
     print(
-        f"style={args.style!r} seed={args.seed} zones={zones_x}x{zones_z} "
+        f"style={args.style!r} seed={resolved_seed} zones={zones_x}x{zones_z} "
         f"samples={terrain.heights.shape[1]}x{terrain.heights.shape[0]}"
     )
     print(" ".join(f"{key}={value:.2f}" for key, value in metrics.items()))
