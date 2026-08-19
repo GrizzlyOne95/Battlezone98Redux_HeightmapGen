@@ -6,6 +6,8 @@ The goal is **not** to generate generic Perlin-noise terrain. Battlezone maps fr
 
 ## Current terrain styles
 
+Core Battlezone-derived styles:
+
 - Terraced Labyrinth
 - Cratered Divide
 - Ravine Network
@@ -20,11 +22,23 @@ The goal is **not** to generate generic Perlin-noise terrain. Battlezone maps fr
 - Walled Crater Basin
 - Escarpment Stronghold
 
+Planetary-inspired Battlezone archetypes:
+
+- Pluto Basin
+- Venus Shield
+- Lunar Catena
+- Mars Rift
+- Callisto Craterlands
+- Titan Basin Network
+- Europa Fracture Plains
+
+The planetary styles borrow **large-scale surface grammar rather than attempting literal DEM reconstruction**. Real-world cues such as smooth basin/highland province contrast, shield-volcano aprons, crater chains, branching rifts, crater saturation, soft basin/channel provinces, and fracture bands are filtered through Battlezone constraints: useful route widths, moderate traversal grades, connected major regions, staging surfaces, and readable satellite-view composition.
+
 Generation uses a **fresh random seed by default** so repeated runs/clicks quickly produce new terrain. Every resolved seed is shown and can be supplied again for exact reproducibility. Global controls adjust relief, naturalization, fine detail, plateau bias, feature density, optional symmetry, and synthetic objective pads.
 
 ## Generated sample corpus
 
-The repository includes a checked-in `samples/` review corpus containing 26 generated terrains across the current style set and a range of dimensions, seeds, symmetry modes, relief/detail settings, and synthetic pad counts.
+The repository includes a checked-in `samples/` review corpus containing 26 generated terrains across the original style set and a range of dimensions, seeds, symmetry modes, relief/detail settings, and synthetic pad counts.
 
 Each sample includes:
 
@@ -85,6 +99,17 @@ python heightmap_generator.py \
 
 Omit `--seed` (or pass `--seed random`) for a fresh seed. The resolved numeric seed is printed so a useful random result can always be reproduced later.
 
+Generate a planetary-inspired rift map:
+
+```bash
+python heightmap_generator.py \
+  --style "Mars Rift" \
+  --zones 4x3 \
+  --seed random \
+  --output mars_rift.hg2 \
+  --preview mars_rift.png
+```
+
 Generate a more synthetic symmetric arena:
 
 ```bash
@@ -113,6 +138,8 @@ The generator intentionally separates three scales of terrain construction:
 3. **Naturalization** — domain variation, irregular banks, ridged/fBm detail, edge breakup and smoothing where it does not destroy authored gameplay geometry.
 
 Protected gameplay flats are not modified by later detail/smoothing passes. Synthetic symmetry copies authored halves/quadrants rather than averaging them, so exact shelf and corridor heights remain exact.
+
+Planetary inspiration is subordinate to gameplay. A geologically believable cliff, crater chain, fracture belt, or volcanic apron is allowed to be simplified, broadened, lowered, interrupted, or given a saddle when that is necessary to keep major Battlezone regions connected and driveable. Planetary connectivity repairs use curved/graded paths instead of assuming that every barrier should receive a short perpendicular ramp.
 
 ## Validation
 
