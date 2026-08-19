@@ -1,5 +1,6 @@
 from .analysis import describe_heightmap, make_preview, terrain_metrics, traversability_metrics
 from .approved_planetary import APPROVED_PLANETARY_RECIPES
+from .contrast import apply_vertical_scale
 from .hg2 import (
     BZ_ZONE_WORLD_SIZE,
     DEFAULT_ZONE_BITS,
@@ -27,14 +28,18 @@ RECIPES = {
 def generate(style: str, settings: GeneratorSettings) -> HG2Map:
     urban = URBAN_RECIPES.get(style)
     if urban is not None:
-        return urban(settings)
-    approved_planetary = APPROVED_PLANETARY_RECIPES.get(style)
-    if approved_planetary is not None:
-        return approved_planetary(settings)
-    planetary = PLANETARY_RECIPES.get(style)
-    if planetary is not None:
-        return planetary(settings)
-    return generate_core(style, settings)
+        terrain = urban(settings)
+    else:
+        approved_planetary = APPROVED_PLANETARY_RECIPES.get(style)
+        if approved_planetary is not None:
+            terrain = approved_planetary(settings)
+        else:
+            planetary = PLANETARY_RECIPES.get(style)
+            if planetary is not None:
+                terrain = planetary(settings)
+            else:
+                terrain = generate_core(style, settings)
+    return apply_vertical_scale(terrain, settings.vertical_scale)
 
 
 __all__ = [
@@ -53,6 +58,7 @@ __all__ = [
     "PLANETARY_RECIPES",
     "RECIPES",
     "URBAN_RECIPES",
+    "apply_vertical_scale",
     "describe_heightmap",
     "generate",
     "make_preview",
