@@ -18,6 +18,17 @@ class HeightmapGeneratorTests(unittest.TestCase):
                 self.assertGreaterEqual(int(a.heights.min()), 0)
                 self.assertLessEqual(int(a.heights.max()), hmg.HG2_SAFE_MAX_HEIGHT)
 
+    def test_seed_resolution_supports_random_and_reproducible_values(self):
+        self.assertEqual(hmg.resolve_seed("42"), 42)
+        self.assertEqual(hmg.resolve_seed("0x2A"), 42)
+        first = hmg.resolve_seed("random")
+        second = hmg.resolve_seed(None)
+        self.assertGreaterEqual(first, 1)
+        self.assertLessEqual(first, hmg.RANDOM_SEED_MAX)
+        self.assertGreaterEqual(second, 1)
+        self.assertLessEqual(second, hmg.RANDOM_SEED_MAX)
+        self.assertNotEqual(first, second)
+
     def test_hg2_round_trip_preserves_height_array(self):
         settings = hmg.GeneratorSettings(zones_x=2, zones_z=1, seed=7)
         original = hmg.generate("Campaign Canyon Network", settings)
