@@ -35,6 +35,7 @@ class GeneratorSettings:
     zones_z: int = 3
     seed: int = 1
     relief: float = 1.0
+    vertical_scale: float = 1.0
     naturalization: float = 0.65
     detail: float = 0.55
     plateau_bias: float = 0.5
