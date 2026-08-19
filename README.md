@@ -53,6 +53,14 @@ Each sample includes:
 python scripts/generate_samples.py
 ```
 
+Planetary archetypes have a separate fresh-seed review generator so they can be iterated without churning the checked-in baseline corpus:
+
+```bash
+python scripts/generate_planetary_samples.py --output planetary_samples --variants 3 --zones 3x3
+```
+
+That writes HG2s, 16-bit height PNGs, hillshade previews, a contact sheet, and CSV/JSON manifests containing the resolved numeric seeds and traversal metrics.
+
 ## HG2 handling
 
 HG2 I/O follows the same layout/indexing used by `BZMapIO.py` and the Redux WorldBuilder tooling:
@@ -81,7 +89,7 @@ Python 3.10+ is recommended.
 python heightmap_generator.py --gui
 ```
 
-The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export. **Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters.
+The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export. **Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters. Planetary styles use the same canonical recipe list and therefore appear alongside the core Battlezone styles in the GUI.
 
 ## CLI examples
 
