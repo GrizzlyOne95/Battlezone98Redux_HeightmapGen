@@ -20,7 +20,7 @@ The goal is **not** to generate generic Perlin-noise terrain. Battlezone maps fr
 - Walled Crater Basin
 - Escarpment Stronghold
 
-Every style is deterministic from its seed. Global controls adjust relief, naturalization, fine detail, plateau bias, feature density, optional symmetry, and synthetic objective pads.
+Generation uses a **fresh random seed by default** so repeated runs/clicks quickly produce new terrain. Every resolved seed is shown and can be supplied again for exact reproducibility. Global controls adjust relief, naturalization, fine detail, plateau bias, feature density, optional symmetry, and synthetic objective pads.
 
 ## Generated sample corpus
 
@@ -33,7 +33,7 @@ Each sample includes:
 - a lossless 16-bit height PNG under `samples/height_png/`
 - exact generation parameters in `samples/manifest.json` and `samples/manifest.csv`
 
-`samples/preview_contact_sheet.png` provides a single visual overview of the full set. The entire corpus is reproducible with:
+`samples/preview_contact_sheet.png` provides a single visual overview of the checked-in set. The corpus can be reproduced with:
 
 ```bash
 python scripts/generate_samples.py
@@ -67,11 +67,11 @@ Python 3.10+ is recommended.
 python heightmap_generator.py --gui
 ```
 
-The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export.
+The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export. **Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters.
 
 ## CLI examples
 
-Generate a 3x3 campaign-style canyon map:
+Generate a 3x3 campaign-style canyon with a reproducible seed:
 
 ```bash
 python heightmap_generator.py \
@@ -82,6 +82,8 @@ python heightmap_generator.py \
   --png canyon.png \
   --preview canyon_preview.png
 ```
+
+Omit `--seed` (or pass `--seed random`) for a fresh seed. The resolved numeric seed is printed so a useful random result can always be reproduced later.
 
 Generate a more synthetic symmetric arena:
 
@@ -100,7 +102,7 @@ Inspect an existing HG2:
 python heightmap_generator.py --analyze-hg2 map.hg2
 ```
 
-The analysis reports dimensions, elevation range, physical slope statistics, exact-flat percentage, dominant authored elevation percentage, and the most common exact elevation levels.
+The analysis reports dimensions, elevation range, physical slope statistics, exact-flat percentage, dominant authored elevation percentage, the most common exact elevation levels, and a slope-mask connectivity diagnostic. The connectivity value is a generator-quality heuristic, not a claim about Battlezone's exact vehicle or AI slope limit.
 
 ## Design principles
 
@@ -114,7 +116,7 @@ Protected gameplay flats are not modified by later detail/smoothing passes. Synt
 
 ## Validation
 
-The current HG2 reader/writer has been round-trip checked against a 28-map reference corpus consisting of stock/custom skirmish terrain and authored campaign terrain. Generated maps are deterministic for identical settings and are clamped to the stock-safe output range.
+The HG2 reader/writer has been round-trip checked against the original 28-map stock/custom/campaign reference corpus. Terrain-shape analysis has since been expanded to **55 accessible authored HG2 references**, including ROTBD/RBD maps ranging from compact 1x1 arenas through large campaign terrain. Generated maps remain deterministic when a resolved numeric seed is supplied and are clamped to the stock-safe output range.
 
 Run the unit tests with:
 
