@@ -1,9 +1,32 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import secrets
 from typing import Tuple
 
 from .hg2 import DEFAULT_ZONE_BITS
+
+RANDOM_SEED_MAX = 2_147_483_647
+
+
+def random_seed() -> int:
+    """Return a fresh positive seed suitable for reproducible terrain generation."""
+    return secrets.randbelow(RANDOM_SEED_MAX) + 1
+
+
+def resolve_seed(value: int | str | None) -> int:
+    """Resolve an integer seed or the user-facing ``random`` sentinel."""
+    if value is None:
+        return random_seed()
+    if isinstance(value, int):
+        return int(value)
+    text = str(value).strip()
+    if not text or text.lower() in {"random", "rand", "auto", "new"}:
+        return random_seed()
+    try:
+        return int(text, 0)
+    except ValueError as exc:
+        raise ValueError("seed must be an integer or 'random'") from exc
 
 
 @dataclass(frozen=True)
