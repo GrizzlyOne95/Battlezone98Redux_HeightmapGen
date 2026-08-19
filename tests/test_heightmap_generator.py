@@ -29,6 +29,22 @@ class HeightmapGeneratorTests(unittest.TestCase):
         self.assertLessEqual(second, hmg.RANDOM_SEED_MAX)
         self.assertNotEqual(first, second)
 
+    def test_vertical_scale_compresses_height_range_without_changing_layout(self):
+        base_settings = hmg.GeneratorSettings(zones_x=1, zones_z=1, seed=12345, vertical_scale=1.0)
+        compressed_settings = hmg.GeneratorSettings(zones_x=1, zones_z=1, seed=12345, vertical_scale=0.60)
+        base = hmg.generate("Mountain Basin", base_settings)
+        compressed = hmg.generate("Mountain Basin", compressed_settings)
+        base_range = int(base.heights.max()) - int(base.heights.min())
+        compressed_range = int(compressed.heights.max()) - int(compressed.heights.min())
+        self.assertLess(compressed_range, base_range)
+        self.assertAlmostEqual(compressed_range / base_range, 0.60, delta=0.02)
+        self.assertEqual(base.heights.shape, compressed.heights.shape)
+
+    def test_vertical_scale_one_is_identity(self):
+        terrain = hmg.generate("Natural Badlands", hmg.GeneratorSettings(zones_x=1, zones_z=1, seed=77))
+        scaled = hmg.apply_vertical_scale(terrain, 1.0)
+        self.assertTrue(np.array_equal(terrain.heights, scaled.heights))
+
     def test_hg2_round_trip_preserves_height_array(self):
         settings = hmg.GeneratorSettings(zones_x=2, zones_z=1, seed=7)
         original = hmg.generate("Campaign Canyon Network", settings)

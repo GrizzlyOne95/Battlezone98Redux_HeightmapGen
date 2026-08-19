@@ -14,6 +14,7 @@ def cli() -> int:
     parser.add_argument("--zones", default="3x3", help="zone dimensions, e.g. 3x3 or 4x5")
     parser.add_argument("--seed", default="random", help="integer seed for reproducibility, or 'random' (default)")
     parser.add_argument("--relief", type=float, default=1.0)
+    parser.add_argument("--vertical-scale", type=float, default=1.0, help="post-generation vertical contrast multiplier; 0.75 keeps 75%% of height differences")
     parser.add_argument("--naturalization", type=float, default=0.65)
     parser.add_argument("--detail", type=float, default=0.55)
     parser.add_argument("--plateau-bias", type=float, default=0.5)
@@ -48,9 +49,13 @@ def cli() -> int:
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
+    if not (0.1 <= args.vertical_scale <= 2.5):
+        raise SystemExit("--vertical-scale must be between 0.1 and 2.5")
+
     settings = GeneratorSettings(
         zones_x=zones_x, zones_z=zones_z, seed=resolved_seed,
-        relief=args.relief, naturalization=args.naturalization, detail=args.detail,
+        relief=args.relief, vertical_scale=args.vertical_scale,
+        naturalization=args.naturalization, detail=args.detail,
         plateau_bias=args.plateau_bias, feature_density=args.feature_density,
         symmetry=args.symmetry, synthetic_pads=args.pads,
     )
@@ -63,7 +68,7 @@ def cli() -> int:
         make_preview(terrain.heights).save(args.preview)
 
     metrics = terrain_metrics(terrain.heights)
-    print(f"style={args.style!r} seed={resolved_seed} zones={zones_x}x{zones_z} samples={terrain.heights.shape[1]}x{terrain.heights.shape[0]}")
+    print(f"style={args.style!r} seed={resolved_seed} zones={zones_x}x{zones_z} vertical_scale={args.vertical_scale:.2f} samples={terrain.heights.shape[1]}x{terrain.heights.shape[0]}")
     print(" ".join(f"{key}={value:.2f}" for key, value in metrics.items()))
     if not (args.output or args.png or args.preview):
         print("No output requested; use --output map.hg2, --png height.png, --preview preview.png, or --gui.")

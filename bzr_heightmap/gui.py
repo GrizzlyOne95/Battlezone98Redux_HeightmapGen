@@ -16,7 +16,7 @@ def run_gui() -> None:
 
     root = tk.Tk()
     root.title("BZR Heightmap Generator")
-    root.geometry("1320x850")
+    root.geometry("1320x900")
     root.configure(bg="#0a0a0a")
 
     style = ttk.Style(root)
@@ -40,6 +40,7 @@ def run_gui() -> None:
         "seed": tk.IntVar(value=random_seed()),
         "fresh_seed": tk.BooleanVar(value=True),
         "relief": tk.DoubleVar(value=1.0),
+        "vertical_scale": tk.DoubleVar(value=1.0),
         "naturalization": tk.DoubleVar(value=0.65),
         "detail": tk.DoubleVar(value=0.55),
         "plateau_bias": tk.DoubleVar(value=0.5),
@@ -74,6 +75,7 @@ def run_gui() -> None:
             zones_z=max(1, vars_["zones_z"].get()),
             seed=vars_["seed"].get(),
             relief=vars_["relief"].get(),
+            vertical_scale=vars_["vertical_scale"].get(),
             naturalization=vars_["naturalization"].get(),
             detail=vars_["detail"].get(),
             plateau_bias=vars_["plateau_bias"].get(),
@@ -97,7 +99,8 @@ def run_gui() -> None:
             highlightthickness=0, troughcolor="#222222",
         ).pack(fill="x")
 
-    slider("Relief", "relief", 0.25, 2.25, 0.05)
+    slider("Recipe relief", "relief", 0.25, 2.25, 0.05)
+    slider("Final terrain contrast / vertical scale", "vertical_scale", 0.35, 1.50, 0.05)
     slider("Naturalization / edge warp", "naturalization", 0.0, 1.0, 0.05)
     slider("Fine detail", "detail", 0.0, 1.0, 0.05)
     slider("Plateau bias", "plateau_bias", 0.0, 1.0, 0.05)
@@ -138,7 +141,8 @@ def run_gui() -> None:
             f"{world_x:.0f}x{world_z:.0f} world units | "
             f"height {metrics['min']:.0f}..{metrics['max']:.0f} | "
             f"flat {metrics['exact_flat_pct']:.1f}% | "
-            f"median/p95 slope {metrics['median_slope_deg']:.1f}°/{metrics['p95_slope_deg']:.1f}°"
+            f"median/p95 slope {metrics['median_slope_deg']:.1f}°/{metrics['p95_slope_deg']:.1f}° | "
+            f"vertical scale {vars_['vertical_scale'].get():.2f}x"
         ))
 
     def do_generate(*, preserve_seed: bool = False) -> None:
