@@ -22,6 +22,23 @@ The goal is **not** to generate generic Perlin-noise terrain. Battlezone maps fr
 
 Every style is deterministic from its seed. Global controls adjust relief, naturalization, fine detail, plateau bias, feature density, optional symmetry, and synthetic objective pads.
 
+## Generated sample corpus
+
+The repository includes a checked-in `samples/` review corpus containing 26 generated terrains across the current style set and a range of dimensions, seeds, symmetry modes, relief/detail settings, and synthetic pad counts.
+
+Each sample includes:
+
+- a directly testable `.hg2` under `samples/hg2/`
+- a hillshade review image under `samples/previews/`
+- a lossless 16-bit height PNG under `samples/height_png/`
+- exact generation parameters in `samples/manifest.json` and `samples/manifest.csv`
+
+`samples/preview_contact_sheet.png` provides a single visual overview of the full set. The entire corpus is reproducible with:
+
+```bash
+python scripts/generate_samples.py
+```
+
 ## HG2 handling
 
 HG2 I/O follows the same layout/indexing used by `BZMapIO.py` and the Redux WorldBuilder tooling:
