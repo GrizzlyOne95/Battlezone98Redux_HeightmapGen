@@ -1,0 +1,27 @@
+label,style,zones,seed,relief,naturalization,detail,plateau_bias,feature_density,symmetry,pads,hg2,height_png,preview
+terraced_baseline,Terraced Labyrinth,3x3,101,1.0,0.55,0.45,0.7,0.55,None,0,hg2/terraced_baseline.hg2,height_png/terraced_baseline.png,previews/terraced_baseline_preview.png
+terraced_symmetric,Terraced Labyrinth,4x4,111,1.15,0.5,0.35,0.82,0.6,4-way,4,hg2/terraced_symmetric.hg2,height_png/terraced_symmetric.png,previews/terraced_symmetric_preview.png
+cratered_divide,Cratered Divide,3x3,202,1.1,0.55,0.5,0.45,0.6,None,0,hg2/cratered_divide.hg2,height_png/cratered_divide.png,previews/cratered_divide_preview.png
+cratered_arena,Cratered Divide,2x2,212,0.95,0.45,0.4,0.55,0.5,2-way rotational,2,hg2/cratered_arena.hg2,height_png/cratered_arena.png,previews/cratered_arena_preview.png
+ravine_basin,Ravine Network,4x4,303,1.0,0.7,0.55,0.42,0.65,None,0,hg2/ravine_basin.hg2,height_png/ravine_basin.png,previews/ravine_basin_preview.png
+ravine_mirror,Ravine Network,3x4,313,1.05,0.62,0.5,0.4,0.72,Mirror X,2,hg2/ravine_mirror.hg2,height_png/ravine_mirror.png,previews/ravine_mirror_preview.png
+mountain_basin,Mountain Basin,4x4,404,1.2,0.7,0.6,0.35,0.5,None,0,hg2/mountain_basin.hg2,height_png/mountain_basin.png,previews/mountain_basin_preview.png
+mountain_fortress,Mountain Basin,3x3,414,1.1,0.62,0.48,0.5,0.48,4-way,4,hg2/mountain_fortress.hg2,height_png/mountain_fortress.png,previews/mountain_fortress_preview.png
+radial_badlands,Radial Badlands,3x3,505,1.05,0.6,0.55,0.48,0.62,None,0,hg2/radial_badlands.hg2,height_png/radial_badlands.png,previews/radial_badlands_preview.png
+radial_spokes,Radial Badlands,4x4,515,1.1,0.58,0.52,0.5,0.7,2-way rotational,2,hg2/radial_spokes.hg2,height_png/radial_spokes.png,previews/radial_spokes_preview.png
+ridged_wastes,Ridged Wastes,4x5,606,1.18,0.65,0.62,0.3,0.68,None,0,hg2/ridged_wastes.hg2,height_png/ridged_wastes.png,previews/ridged_wastes_preview.png
+ridged_corridors,Ridged Wastes,3x4,616,1.08,0.58,0.58,0.36,0.6,Mirror Z,2,hg2/ridged_corridors.hg2,height_png/ridged_corridors.png,previews/ridged_corridors_preview.png
+serpentine_canyon,Serpentine Canyon,4x4,707,1.0,0.6,0.46,0.55,0.55,None,0,hg2/serpentine_canyon.hg2,height_png/serpentine_canyon.png,previews/serpentine_canyon_preview.png
+serpentine_arena,Serpentine Canyon,2x2,717,0.9,0.5,0.38,0.6,0.48,4-way,4,hg2/serpentine_arena.hg2,height_png/serpentine_arena.png,previews/serpentine_arena_preview.png
+natural_badlands,Natural Badlands,4x4,808,1.12,0.72,0.68,0.28,0.62,None,0,hg2/natural_badlands.hg2,height_png/natural_badlands.png,previews/natural_badlands_preview.png
+natural_badlands_mirror,Natural Badlands,3x3,818,1.0,0.66,0.6,0.32,0.54,Mirror X,2,hg2/natural_badlands_mirror.hg2,height_png/natural_badlands_mirror.png,previews/natural_badlands_mirror_preview.png
+campaign_canyon,Campaign Canyon Network,4x4,909,0.98,0.58,0.48,0.62,0.66,None,0,hg2/campaign_canyon.hg2,height_png/campaign_canyon.png,previews/campaign_canyon_preview.png
+campaign_canyon_4way,Campaign Canyon Network,3x3,919,0.92,0.52,0.42,0.66,0.6,4-way,4,hg2/campaign_canyon_4way.hg2,height_png/campaign_canyon_4way.png,previews/campaign_canyon_4way_preview.png
+compartmented_plateau,Compartmented Plateau,4x4,1001,1.0,0.56,0.44,0.78,0.64,None,0,hg2/compartmented_plateau.hg2,height_png/compartmented_plateau.png,previews/compartmented_plateau_preview.png
+compartmented_plateau_mirror,Compartmented Plateau,3x4,1011,1.05,0.52,0.4,0.8,0.58,Mirror Z,2,hg2/compartmented_plateau_mirror.hg2,height_png/compartmented_plateau_mirror.png,previews/compartmented_plateau_mirror_preview.png
+sparse_mission_field,Sparse Mission Field,4x5,1101,0.9,0.45,0.35,0.72,0.3,None,0,hg2/sparse_mission_field.hg2,height_png/sparse_mission_field.png,previews/sparse_mission_field_preview.png
+sparse_mission_arena,Sparse Mission Field,3x3,1111,0.88,0.42,0.32,0.74,0.36,2-way rotational,4,hg2/sparse_mission_arena.hg2,height_png/sparse_mission_arena.png,previews/sparse_mission_arena_preview.png
+walled_crater_basin,Walled Crater Basin,2x2,1201,0.95,0.46,0.38,0.62,0.44,4-way,4,hg2/walled_crater_basin.hg2,height_png/walled_crater_basin.png,previews/walled_crater_basin_preview.png
+walled_crater_large,Walled Crater Basin,3x3,1211,1.02,0.5,0.42,0.58,0.48,2-way rotational,2,hg2/walled_crater_large.hg2,height_png/walled_crater_large.png,previews/walled_crater_large_preview.png
+escarpment_stronghold,Escarpment Stronghold,3x3,1301,1.08,0.54,0.42,0.82,0.56,None,2,hg2/escarpment_stronghold.hg2,height_png/escarpment_stronghold.png,previews/escarpment_stronghold_preview.png
+escarpment_stronghold_4way,Escarpment Stronghold,4x4,1311,1.12,0.5,0.38,0.84,0.62,4-way,4,hg2/escarpment_stronghold_4way.hg2,height_png/escarpment_stronghold_4way.png,previews/escarpment_stronghold_4way_preview.png
