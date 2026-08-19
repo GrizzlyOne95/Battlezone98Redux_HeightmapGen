@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 from typing import Optional
 
 from PIL import ImageTk
@@ -8,7 +7,7 @@ from PIL import ImageTk
 from .analysis import make_preview, terrain_metrics
 from .hg2 import HG2Map
 from .recipes import RECIPES, generate
-from .settings import GeneratorSettings
+from .settings import GeneratorSettings, random_seed
 
 
 def run_gui() -> None:
@@ -38,7 +37,8 @@ def run_gui() -> None:
         "style": tk.StringVar(value="Terraced Labyrinth"),
         "zones_x": tk.IntVar(value=3),
         "zones_z": tk.IntVar(value=3),
-        "seed": tk.IntVar(value=1),
+        "seed": tk.IntVar(value=random_seed()),
+        "fresh_seed": tk.BooleanVar(value=True),
         "relief": tk.DoubleVar(value=1.0),
         "naturalization": tk.DoubleVar(value=0.65),
         "detail": tk.DoubleVar(value=0.55),
@@ -82,11 +82,6 @@ def run_gui() -> None:
             synthetic_pads=max(0, vars_["pads"].get()),
         )
 
-    info = ttk.Label(right, text="Generate a terrain to preview it.")
-    info.pack(anchor="w", pady=(0, 6))
-    canvas = tk.Canvas(right, bg="#050505", highlightthickness=0)
-    canvas.pack(fill="both", expand=True)
-
     def redraw() -> None:
         terrain = current["map"]
         if terrain is None:
@@ -110,8 +105,10 @@ def run_gui() -> None:
             )
         )
 
-    def do_generate() -> None:
+    def do_generate(*, preserve_seed: bool = False) -> None:
         try:
+            if vars_["fresh_seed"].get() and not preserve_seed:
+                vars_["seed"].set(random_seed())
             root.config(cursor="watch")
             root.update_idletasks()
             current["map"] = generate(vars_["style"].get(), settings_from_ui())
@@ -122,10 +119,11 @@ def run_gui() -> None:
             root.config(cursor="")
 
     def randomize_seed() -> None:
-        vars_["seed"].set(random.SystemRandom().randint(1, 2_147_483_647))
-        do_generate()
+        vars_["seed"].set(random_seed())
+        do_generate(preserve_seed=True)
 
     ttk.Button(seed_row, text="Randomize", command=randomize_seed).pack(side="right")
+    ttk.Checkbutton(left, text="Fresh random seed each Generate", variable=vars_["fresh_seed"]).pack(anchor="w", pady=(0, 8))
 
     def slider(label: str, key: str, low: float, high: float, step: float) -> None:
         ttk.Label(left, text=label).pack(anchor="w")
@@ -162,6 +160,11 @@ def run_gui() -> None:
     ttk.Label(pad_row, text="Objective pads").pack(side="left")
     ttk.Spinbox(pad_row, textvariable=vars_["pads"], from_=0, to=8, width=5).pack(side="right")
 
+    info = ttk.Label(right, text="Generate a terrain to preview it.")
+    info.pack(anchor="w", pady=(0, 6))
+    canvas = tk.Canvas(right, bg="#050505", highlightthickness=0)
+    canvas.pack(fill="both", expand=True)
+
     def export_hg2() -> None:
         if current["map"] is None:
             do_generate()
@@ -183,5 +186,5 @@ def run_gui() -> None:
     ttk.Button(buttons, text="Export 16-bit PNG...", command=export_png).pack(fill="x", pady=2)
     canvas.bind("<Configure>", lambda _event: redraw())
 
-    do_generate()
+    do_generate(preserve_seed=True)
     root.mainloop()
