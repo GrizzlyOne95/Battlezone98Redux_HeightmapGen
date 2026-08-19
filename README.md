@@ -32,7 +32,18 @@ Planetary-inspired Battlezone archetypes:
 - Titan Basin Network
 - Europa Fracture Plains
 
+Urban Substrate styles:
+
+- Dense City Grid
+- Hillside Mega-District
+- Industrial Terrace
+- Sunken Expressway
+- Arcology Edge
+- Cyberpunk Mixed District
+
 The planetary styles borrow **large-scale surface grammar rather than attempting literal DEM reconstruction**. Real-world cues such as smooth basin/highland province contrast, shield-volcano aprons, crater chains, branching rifts, crater saturation, soft basin/channel provinces, and fracture bands are filtered through Battlezone constraints: useful route widths, moderate traversal grades, connected major regions, staging surfaces, and readable satellite-view composition.
+
+Urban Substrate styles generate the terrain beneath a dense city rather than baking buildings into the heightmap: streets, crossways, long grade changes, plazas, industrial yards, block/building pads, terraced districts, sunken transport corridors, and synthetic retaining-landform transitions. Building meshes and decoration are intended to be placed later on top of these terrain foundations.
 
 Generation uses a **fresh random seed by default** so repeated runs/clicks quickly produce new terrain. Every resolved seed is shown and can be supplied again for exact reproducibility. Global controls adjust relief, naturalization, fine detail, plateau bias, feature density, optional symmetry, and synthetic objective pads.
 
@@ -89,7 +100,7 @@ Python 3.10+ is recommended.
 python heightmap_generator.py --gui
 ```
 
-The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export. **Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters. Planetary styles use the same canonical recipe list and therefore appear alongside the core Battlezone styles in the GUI.
+The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export. **Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters. Core, planetary, and urban styles share the same canonical recipe list and therefore appear together in the GUI.
 
 ## CLI examples
 
@@ -116,6 +127,17 @@ python heightmap_generator.py \
   --seed random \
   --output mars_rift.hg2 \
   --preview mars_rift.png
+```
+
+Generate a dense city terrain underlay:
+
+```bash
+python heightmap_generator.py \
+  --style "Dense City Grid" \
+  --zones 4x4 \
+  --seed random \
+  --output city_substrate.hg2 \
+  --preview city_substrate.png
 ```
 
 Generate a more synthetic symmetric arena:
@@ -148,6 +170,8 @@ The generator intentionally separates three scales of terrain construction:
 Protected gameplay flats are not modified by later detail/smoothing passes. Synthetic symmetry copies authored halves/quadrants rather than averaging them, so exact shelf and corridor heights remain exact.
 
 Planetary inspiration is subordinate to gameplay. A geologically believable cliff, crater chain, fracture belt, or volcanic apron is allowed to be simplified, broadened, lowered, interrupted, or given a saddle when that is necessary to keep major Battlezone regions connected and driveable. Planetary connectivity repairs use curved/graded paths instead of assuming that every barrier should receive a short perpendicular ramp.
+
+Urban terrain follows the same rule: city structure is subordinate to Battlezone traversal. Street grids and megablocks are broadened into vehicle-usable corridors and pads; hillside districts use long engineered grades; sunken routes receive ramps; and natural relief can interrupt or shape synthetic districts without making the map an alley maze.
 
 ## Validation
 
