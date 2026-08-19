@@ -98,23 +98,100 @@ def hillside_mega_district(s: GeneratorSettings) -> HG2Map:
 
 
 def industrial_terrace(s: GeneratorSettings) -> HG2Map:
-    b = TerrainBuilder(s).set_level(700)
+    b = TerrainBuilder(s).set_level(760)
     m = min(b.h, b.w)
-    b.add_fbm(90, m * 0.28, ridged=False, octaves=3)
-    for level, frac in zip([760, 980, 1220], [0.24, 0.19, 0.14]):
-        b.stamp_blob_shelf(level, frac, m * 0.22, feather=m * 0.024, warp_px=m * 0.02 * s.naturalization, protect_core=True)
-    for frac in [0.20, 0.44, 0.68, 0.84]:
-        _corridor(b, [(b.w * 0.08, b.h * frac), (b.w * 0.92, b.h * frac)], 860 + frac * 120, m * 0.014, m * 0.020, 24)
-    for frac in [0.24, 0.52, 0.80]:
-        _corridor(b, [(b.w * frac, b.h * 0.08), (b.w * frac, b.h * 0.92)], 860 + frac * 80, m * 0.013, m * 0.019, 22)
-    for _ in range(10):
-        cx = float(b.rng.uniform(b.w * 0.15, b.w * 0.85)); cy = float(b.rng.uniform(b.h * 0.15, b.h * 0.85))
-        rx = m * float(b.rng.uniform(0.045, 0.095)); ry = m * float(b.rng.uniform(0.035, 0.08))
-        iy, ix = int(round(cy)), int(round(cx))
-        target = float(b.a[np.clip(iy, 0, b.h - 1), np.clip(ix, 0, b.w - 1)]) + float(b.rng.uniform(10, 38))
-        b.flatten_pad(cx, cy, rx, ry, target=target, feather=m * 0.010, rectangular=True)
-    b.add_detail(2.6 * s.detail, m * 0.055)
-    _repair_connectivity(b, 40, 0.95, 3, m * 0.008, m * 0.014)
+
+    # Keep the terrain itself gentle; the industrial character should come from
+    # stepped yards, service cuts, and long grade connections rather than noise.
+    b.add_fbm(52, m * 0.34, ridged=False, octaves=3)
+
+    # Four broad industrial elevation bands distribute useful terrain across the
+    # whole map instead of leaving a few isolated shelves in a mostly empty field.
+    row_levels = [820.0, 950.0, 1080.0, 1210.0]
+    ys = _line_positions(b.h, 0.15, 0.85, len(row_levels), b.rng, 0.018)
+    xs = _line_positions(b.w, 0.14, 0.86, 4 + int(s.feature_density > 0.58), b.rng, 0.024)
+
+    for row, (level, y) in enumerate(zip(row_levels, ys)):
+        end_y = y + float(b.rng.uniform(-m * 0.018, m * 0.018))
+        service = meander_path(
+            (b.w * 0.06, y),
+            (b.w * 0.94, end_y),
+            10,
+            m * 0.018 * s.naturalization,
+            b.rng,
+        )
+        _corridor(b, service, level, m * 0.0125, m * 0.020, 20)
+
+        for col, x in enumerate(xs):
+            cx = x + float(b.rng.uniform(-m * 0.018, m * 0.018))
+            cy = y + float(b.rng.uniform(-m * 0.022, m * 0.022))
+            large_yard = (col + row) % 3 == 0
+            if large_yard:
+                rx = m * float(b.rng.uniform(0.078, 0.115))
+                ry = m * float(b.rng.uniform(0.052, 0.080))
+            else:
+                rx = m * float(b.rng.uniform(0.052, 0.082))
+                ry = m * float(b.rng.uniform(0.036, 0.060))
+            target = level + float(b.rng.uniform(8, 34))
+            b.flatten_pad(cx, cy, rx, ry, target=target, feather=m * 0.010, rectangular=True)
+
+    # Long, broad ramps connect every terrace band at several different columns.
+    # Alternating offsets keep the layout industrial rather than perfectly gridded.
+    ramp_columns = [0.20, 0.47, 0.74]
+    if s.feature_density > 0.70:
+        ramp_columns.append(0.86)
+    for row in range(len(row_levels) - 1):
+        for j, frac in enumerate(ramp_columns):
+            x0 = b.w * frac + float(b.rng.uniform(-m * 0.020, m * 0.020))
+            x1 = x0 + (m * 0.055 if (row + j) % 2 == 0 else -m * 0.055)
+            _urban_ramp(
+                b,
+                (x0, ys[row]),
+                (x1, ys[row + 1]),
+                row_levels[row],
+                row_levels[row + 1],
+                m * 0.0105,
+                m * 0.015,
+            )
+
+    # Cross-district service routes provide alternative circulation without
+    # turning this family into another Dense City Grid.
+    cross_routes = [
+        ((0.08, 0.31), (0.64, 0.43), 920.0),
+        ((0.34, 0.58), (0.92, 0.49), 1040.0),
+        ((0.10, 0.73), (0.70, 0.88), 1140.0),
+    ]
+    for (sx, sy), (ex, ey), level in cross_routes:
+        path = meander_path(
+            (b.w * sx, b.h * sy),
+            (b.w * ex, b.h * ey),
+            8,
+            m * 0.022 * s.naturalization,
+            b.rng,
+        )
+        _corridor(b, path, level + float(b.rng.uniform(-18, 18)), m * 0.0105, m * 0.017, 16)
+
+    # Smaller yards and loading/service pads fill interstitial space while
+    # preserving open ground for bases, factories, and later building placement.
+    secondary_count = 8 + int(8 * s.feature_density)
+    for _ in range(secondary_count):
+        cx = float(b.rng.uniform(b.w * 0.10, b.w * 0.90))
+        cy = float(b.rng.uniform(b.h * 0.10, b.h * 0.90))
+        iy = int(np.clip(round(cy), 0, b.h - 1))
+        ix = int(np.clip(round(cx), 0, b.w - 1))
+        target = float(b.a[iy, ix]) + float(b.rng.uniform(4, 24))
+        b.flatten_pad(
+            cx,
+            cy,
+            m * float(b.rng.uniform(0.032, 0.062)),
+            m * float(b.rng.uniform(0.025, 0.050)),
+            target=target,
+            feather=m * 0.009,
+            rectangular=True,
+        )
+
+    b.add_detail(2.2 * s.detail, m * 0.060)
+    _repair_connectivity(b, 40, 0.97, 4, m * 0.008, m * 0.014)
     return b.finalize(center_height=1500.0, preserve_flats=True)
 
 
