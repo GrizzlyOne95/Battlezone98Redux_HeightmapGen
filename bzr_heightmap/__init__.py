@@ -10,8 +10,19 @@ from .hg2 import (
     HG2_STRUCTURE_VERSION,
     HG2Map,
 )
-from .recipes import RECIPES, generate
+from .planetary import PLANETARY_RECIPES
+from .recipes import RECIPES as CORE_RECIPES, generate as generate_core
 from .settings import GeneratorSettings, RANDOM_SEED_MAX, random_seed, resolve_seed
+
+RECIPES = {**CORE_RECIPES, **PLANETARY_RECIPES}
+
+
+def generate(style: str, settings: GeneratorSettings) -> HG2Map:
+    planetary = PLANETARY_RECIPES.get(style)
+    if planetary is not None:
+        return planetary(settings)
+    return generate_core(style, settings)
+
 
 __all__ = [
     "BZ_ZONE_WORLD_SIZE",
@@ -25,6 +36,7 @@ __all__ = [
     "HG2_STORAGE_MASK",
     "HG2_STRUCTURE_VERSION",
     "HG2Map",
+    "PLANETARY_RECIPES",
     "RECIPES",
     "describe_heightmap",
     "generate",

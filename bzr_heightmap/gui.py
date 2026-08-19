@@ -6,7 +6,7 @@ from PIL import ImageTk
 
 from .analysis import make_preview, terrain_metrics
 from .hg2 import HG2Map
-from .recipes import RECIPES, generate
+from . import RECIPES, generate
 from .settings import GeneratorSettings, random_seed
 
 
