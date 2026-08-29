@@ -130,7 +130,18 @@ class TerrainBuilder:
         feather: float = 14.0,
         rectangular: bool = False,
     ) -> "TerrainBuilder":
-        yy, xx = np.mgrid[0:self.h, 0:self.w].astype(np.float32)
+        # Work only in the pad's finite feather footprint. Large authored city
+        # maps can contain scores of building platforms; allocating full-map
+        # coordinate grids for every pad made 8x8-zone layouts needlessly slow.
+        margin_x = float(radius_x) + max(float(feather), 0.0) + 2.0
+        margin_y = float(radius_y) + max(float(feather), 0.0) + 2.0
+        minx = max(0, int(np.floor(float(cx) - margin_x)))
+        maxx = min(self.w, int(np.ceil(float(cx) + margin_x + 1.0)))
+        miny = max(0, int(np.floor(float(cy) - margin_y)))
+        maxy = min(self.h, int(np.ceil(float(cy) + margin_y + 1.0)))
+        if minx >= maxx or miny >= maxy:
+            return self
+        yy, xx = np.mgrid[miny:maxy, minx:maxx].astype(np.float32)
         if rectangular:
             dx = np.abs(xx - cx) - radius_x
             dy = np.abs(yy - cy) - radius_y
@@ -142,11 +153,12 @@ class TerrainBuilder:
                 np.sqrt(((xx - cx) / max(radius_x, 1.0)) ** 2 + ((yy - cy) / max(radius_y, 1.0)) ** 2) - 1.0
             ) * min(radius_x, radius_y)
         weight = 1.0 - smoothstep01((signed_distance + feather) / max(feather * 2.0, 1e-3))
+        area = self.a[miny:maxy, minx:maxx]
         if target is None:
             core = weight > 0.95
-            target = float(np.median(self.a[core])) if np.any(core) else float(np.median(self.a))
-        self.a = self.a * (1.0 - weight) + float(target) * weight
-        self.protected |= weight >= 0.985
+            target = float(np.median(area[core])) if np.any(core) else float(np.median(area))
+        area[:] = area * (1.0 - weight) + float(target) * weight
+        self.protected[miny:maxy, minx:maxx] |= weight >= 0.985
         return self
 
     def stamp_mask_level(self, mask: np.ndarray, target: float, feather: float = 12.0, protect_core: bool = True) -> "TerrainBuilder":

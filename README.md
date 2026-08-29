@@ -40,6 +40,7 @@ Urban Substrate styles:
 - Sunken Expressway
 - Arcology Edge
 - Cyberpunk Mixed District
+- Cyberpunk Megacity
 
 The planetary styles borrow **large-scale surface grammar rather than attempting literal DEM reconstruction**. Real-world cues such as smooth basin/highland province contrast, shield-volcano aprons, crater chains, branching rifts, crater saturation, soft basin/channel provinces, and fracture bands are filtered through Battlezone constraints: useful route widths, moderate traversal grades, connected major regions, staging surfaces, and readable satellite-view composition.
 
