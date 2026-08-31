@@ -232,9 +232,11 @@ def pluto_basin(s: GeneratorSettings) -> HG2Map:
     ell = np.sqrt(((xx - cx) / max(rx, 1)) ** 2 + ((yy - cy) / max(ry, 1)) ** 2)
     basin = np.exp(-0.5 * (ell / 0.74) ** 4)
     rim = np.exp(-0.5 * ((ell - 1.0) / 0.22) ** 2)
-    b.a -= (basin * 320).astype(np.float32)
-    b.a += (rim * 115).astype(np.float32)
+    b.a -= (basin * 380).astype(np.float32)
+    b.a += (rim * 140).astype(np.float32)
     b.add_fbm(58, m * 0.56, ridged=False, octaves=3)
+    # Preserve a broad lowland floor while keeping Pluto's basin/rim macro form.
+    b.stamp_blob_shelf(target=720.0, area_fraction=0.13, feature_px=m * 0.42, feather=m * 0.028, warp_px=m * 0.018 * s.naturalization)
     rough = ridged_fbm(b.a.shape, m * 0.155, b.rng, 4)
     outer = smoothstep01(np.clip((ell - 0.78) / 0.50, 0, 1))
     patch = smoothstep01(np.clip((fbm(b.a.shape, m * 0.36, b.rng, octaves=3, persistence=0.52) + 0.18) / 0.8, 0, 1))
@@ -253,7 +255,7 @@ def pluto_basin(s: GeneratorSettings) -> HG2Map:
             b.crater(px, py, rad, rad * 1.05, rad * 0.30, float(b.rng.uniform(0.82, 1.22)))
     b.add_detail(3 * s.detail, m * 0.060)
     _repair_connectivity(b, 38, 0.94, 3, m * 0.009, m * 0.016)
-    return b.finalize(center_height=1350, preserve_flats=True)
+    return b.finalize(center_height=1380, preserve_flats=True)
 
 
 def venus_shield(s: GeneratorSettings) -> HG2Map:
@@ -377,9 +379,12 @@ def titan_basin_network(s: GeneratorSettings) -> HG2Map:
         b.a -= (np.exp(-0.5 * (rr / 0.78) ** 4) * float(b.rng.uniform(155, 235))).astype(np.float32)
         basins.append((cx, cy))
     _masked_fbm(b, 190, m * 0.21, m * 0.42, 0.30, ridged=False, softness=0.70)
+    # Preserve exact staging floors inside each basin without flattening the network.
+    for cx, cy in basins:
+        b.stamp_blob_shelf(target=float(np.mean(b.a[int(cy - m * 0.08) : int(cy + m * 0.08), int(cx - m * 0.08) : int(cx + m * 0.08)])), area_fraction=0.04, feature_px=m * 0.14, feather=m * 0.016, warp_px=m * 0.012 * s.naturalization)
     anchors = [_edge_point(b, "left", float(b.rng.uniform(0.35, 0.70))), *basins, _edge_point(b, "right", float(b.rng.uniform(0.30, 0.68)))]
     for ia, ib in [(0, 1), (1, 2), (2, 3), (3, 4), (1, 3)]:
-        b.carve_path(meander_path(anchors[ia], anchors[ib], 13, m * 0.095 * s.naturalization, b.rng), float(b.rng.uniform(30, 58)), m * 0.028, m * 0.090, float(b.rng.uniform(0, 6)))
+        b.carve_path(meander_path(anchors[ia], anchors[ib], 13, m * 0.095 * s.naturalization, b.rng), float(b.rng.uniform(30, 58)), m * 0.032, m * 0.090, float(b.rng.uniform(0, 6)))
     for _ in range(6 + int(5 * s.feature_density)):
         cx = float(b.rng.uniform(m * 0.10, b.w - m * 0.10))
         cy = float(b.rng.uniform(m * 0.10, b.h - m * 0.10))
@@ -388,7 +393,7 @@ def titan_basin_network(s: GeneratorSettings) -> HG2Map:
     b.add_random_craters(2 + int(4 * s.feature_density), (m * 0.015, m * 0.035), 0.68, 0.20)
     b.add_detail(3 * s.detail, m * 0.060)
     _repair_connectivity(b, 38, 0.96, 2, m * 0.008, m * 0.014)
-    return b.finalize(center_height=1320, preserve_flats=False)
+    return b.finalize(center_height=1320, preserve_flats=True)
 
 
 def europa_fracture_plains(s: GeneratorSettings) -> HG2Map:

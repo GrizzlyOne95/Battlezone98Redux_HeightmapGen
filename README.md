@@ -40,6 +40,7 @@ Urban Substrate styles:
 - Sunken Expressway
 - Arcology Edge
 - Cyberpunk Mixed District
+- Cyberpunk Megacity
 
 The planetary styles borrow **large-scale surface grammar rather than attempting literal DEM reconstruction**. Real-world cues such as smooth basin/highland province contrast, shield-volcano aprons, crater chains, branching rifts, crater saturation, soft basin/channel provinces, and fracture bands are filtered through Battlezone constraints: useful route widths, moderate traversal grades, connected major regions, staging surfaces, and readable satellite-view composition.
 
@@ -100,7 +101,17 @@ Python 3.10+ is recommended.
 python heightmap_generator.py --gui
 ```
 
-The GUI provides terrain style, map dimensions, seed, relief/naturalization/detail controls, symmetry, objective pads, a hillshaded preview, and HG2/PNG export. **Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters. Core, planetary, and urban styles share the same canonical recipe list and therefore appear together in the GUI.
+The GUI provides live terrain tuning with a responsive preview area (tabbed **HG2 Height / LGT Lighting / Shaded**). Basic controls are prominent — Terrain Style, Zones X/Z, Seed, Randomize, Fresh-seed toggle, Terrain Contrast / Vertical Relief, and Generate — while less-commonly used recipe controls (relief, naturalization, detail, plateau bias, feature density, symmetry, pads) live under **Advanced**. Changing style, seed, relief, contrast, naturalization, detail, plateau bias, feature density, symmetry, or pad count triggers a debounced (~200 ms) live preview update; resizing the window re-thumbnails cached previews without regenerating terrain, and changing only vertical contrast reuses the cached raw heights (re-applies `apply_vertical_scale` around the median) for a snappy slider. One background worker handles the newest request, stale results are rejected, and all Tk widgets/`PhotoImage` objects stay on the main thread. Closing the window is safe while work is active. The exact resolved seed is visible at all times. Core, planetary, and urban styles share the same canonical recipe list and therefore appear together in the GUI.
+
+Previews:
+
+- **HG2 Height** — raw BZ height field with a fixed `0..4095 → 0..255` mapping (no percentile renormalization). Changing terrain contrast visibly changes this view because it changes actual heights, not display brightness. Exact-authored flats remain exact. Lossless 16-bit PNG export preserves heights (`height ×16`).
+- **LGT Lighting** — live BZ LGT-style lighting derived from the current terrain (slope normals + NW sun 315°/45° + 25% ambient floor, per `format_lgt.html`). It approximates what the game emphasizes (ridges, basins, slope facing). Arrays use the HG2/LGT south-first file convention; this is equivalent to Z64Tools flipping a conventional north-at-top PNG before zoning. A preview is not automatically an engine-valid `.LGT` export; the experimental `.LGT` exporter is provided but not claimed as game-tested.
+- **Shaded** — legacy combined elevation + hillshade view retained for quick readability.
+
+Exports: HG2, lossless 16-bit height PNG, HG2 Height PNG (8-bit reference), LGT preview PNG, Shaded preview PNG, and experimental bordered LGT. The GUI exports 256 samples per zone because that is the dominant Redux layout; the library and CLI also support legacy 128-per-zone output.
+
+**Fresh random seed each Generate** is enabled by default; disable it when you want to lock a seed while tuning parameters.
 
 ## CLI examples
 
@@ -113,7 +124,9 @@ python heightmap_generator.py \
   --seed 42 \
   --output canyon.hg2 \
   --png canyon.png \
-  --preview canyon_preview.png
+  --hg2-preview canyon_height.png \
+  --lgt-preview canyon_lighting.png \
+  --preview canyon_shaded.png
 ```
 
 Omit `--seed` (or pass `--seed random`) for a fresh seed. The resolved numeric seed is printed so a useful random result can always be reproduced later.
@@ -157,7 +170,16 @@ Inspect an existing HG2:
 python heightmap_generator.py --analyze-hg2 map.hg2
 ```
 
-The analysis reports dimensions, elevation range, physical slope statistics, exact-flat percentage, dominant authored elevation percentage, the most common exact elevation levels, and a slope-mask connectivity diagnostic. The connectivity value is a generator-quality heuristic, not a claim about Battlezone's exact vehicle or AI slope limit.
+The analysis reports dimensions, elevation range, physical slope statistics, exact-flat percentage, dominant authored elevation percentage, the most common exact elevation levels, shelf/plateau grammar (dominant shelves >2%, shelf area, gap between major shelves, large contiguous flat regions, 80%-coverage level count, lowland/highland balance), slope histogram (gentle/moderate/steep/cliff percentages), abrupt-step frequency, low/high-frequency energy balance, roughness, passable-space clearance/open-field proxies, isolated basins, and a slope-mask connectivity diagnostic. Clearance and connectivity are generator-quality heuristics, not claims about Battlezone's exact vehicle/AI limits or literal authored corridor widths.
+
+Run the expanded local HG2 corpus analysis (discovers every accessible `.hg2` case-insensitively, handles duplicates, probes companion `.TRN`/`.BZN`/`.LGT`/`.MAT`, emits JSON/CSV + sanitized summary):
+
+```bash
+python scripts/analyze_local_corpus.py --discover
+python scripts/analyze_local_corpus.py --roots "C:\path\to\maps" --out output\hg2_corpus_report.json
+```
+
+The full corpus comparison against generated terrain is documented in `docs/HG2_CORPUS_ANALYSIS_20260828.md` (aggregate statistics only; no proprietary HG2 committed).
 
 ## Design principles
 
@@ -175,7 +197,10 @@ Urban terrain follows the same rule: city structure is subordinate to Battlezone
 
 ## Validation
 
-The HG2 reader/writer has been round-trip checked against the original 28-map stock/custom/campaign reference corpus. Terrain-shape analysis has since been expanded to **55 accessible authored HG2 references**, including ROTBD/RBD maps ranging from compact 1x1 arenas through large campaign terrain. Generated maps remain deterministic when a resolved numeric seed is supplied and are clamped to the stock-safe output range.
+The HG2 reader/writer has been round-trip checked against stock and custom maps and remains deterministic for a fixed seed (clamped to the stock-safe `0..4095` range). The controlled scan found **509 paths: 507 valid + 2 invalid = 275 unique contents + 232 duplicate copies**. The disjoint unique classification is **249 authored + 26 HeightmapGen samples + 0 synthetic-only = 275**. Separately, 23 synthetic/test paths collapse to one flat hash that is already represented by two authored map paths. See `docs/HG2_CORPUS_ANALYSIS_20260828.md`; the old “55 references” claim has been superseded.
+
+- **HG2 stores the actual terrain heights.** Lowering **Terrain Contrast / Vertical Relief** scales heights around the median (e.g., 0.75 keeps 75% of differences) and makes slopes less severe without spatially blurring authored terrain; exact flats stay exact.
+- **LGT preview represents terrain lighting, not height.** An LGT preview is not automatically equivalent to an engine-valid `.LGT` export unless verified; the preview approximates slope normals + sun + 25% ambient, and the optional `.LGT` writer uses the bordered Redux layout validated against on-disk sizes.
 
 Run the unit tests with:
 

@@ -25,65 +25,107 @@ def terraced_labyrinth(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(0)
     m = min(b.h, b.w)
     plateau = np.clip(s.plateau_bias, 0, 1)
-    levels = [0.0, 230.0, 500.0, 780.0] if plateau > 0.55 else [0.0, 260.0, 590.0]
+    # Corpus finding (2026-08-28): the authored set has materially larger
+    # dominant shelves and vertical range than the generated baseline.
+    # Broaden the level gaps while preserving this recipe's terrace identity.
+    levels = [0.0, 320.0, 720.0, 1180.0] if plateau > 0.55 else [0.0, 380.0, 820.0]
     b.add_terraced_blobs(
         levels,
-        m * (0.060 + 0.035 * (1 - s.feature_density)),
-        1.5 + 1.8 * s.naturalization,
-        threshold_bias=(plateau - 0.5) * -0.35,
-        warp_px=m * 0.020 * s.naturalization,
+        m * (0.065 + 0.030 * (1 - s.feature_density)),
+        1.8 + 1.4 * s.naturalization,
+        threshold_bias=(plateau - 0.5) * -0.32,
+        warp_px=m * 0.018 * s.naturalization,
     )
-    b.add_detail(5.0 * s.detail, 22.0)
-    return b.finalize(center_height=850.0, preserve_flats=True)
+    # Ensure at least one broad staging flat remains even at high naturalization.
+    if plateau > 0.45:
+        b.stamp_blob_shelf(
+            target=float(levels[-1]),
+            area_fraction=0.12 + 0.10 * plateau,
+            feature_px=m * 0.32,
+            feather=m * 0.028,
+            warp_px=m * 0.015 * s.naturalization,
+        )
+    b.add_detail(4.0 * s.detail, 24.0)
+    return b.finalize(center_height=950.0, preserve_flats=True)
 
 
 def cratered_divide(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(1150)
     m = min(b.h, b.w)
-    b.add_fbm(420, m * 0.38, ridged=False, octaves=4)
+    b.add_fbm(480, m * 0.36, ridged=False, octaves=4)
     path = meander_path(edge_point(b, "left", 0.18), edge_point(b, "right", 0.80), 12, m * 0.11 * s.naturalization, b.rng)
-    b.carve_path(path, depth=900, half_width=m * 0.035, bank=m * 0.10, rim=180)
+    b.carve_path(path, depth=960, half_width=m * 0.038, bank=m * 0.10, rim=190)
     b.add_random_craters(int(8 + 22 * s.feature_density), (m * 0.025, m * 0.075), 4.0, 1.0)
-    b.add_detail(65 * s.detail, m * 0.035)
-    return b.finalize(center_height=1900.0, preserve_flats=False)
+    # Corpus fix: the authored set averages 39.5% exact-flat staging. This
+    # recipe previously yielded 0.7% flat and p95 slope 18.1; broad lowland
+    # and highland shelves raise both staging area and escarpment contrast.
+    b.stamp_blob_shelf(
+        target=620.0,
+        area_fraction=0.18 + 0.08 * s.plateau_bias,
+        feature_px=m * 0.38,
+        feather=m * 0.022,
+        warp_px=m * 0.020 * s.naturalization,
+    )
+    b.stamp_blob_shelf(
+        target=1680.0,
+        area_fraction=0.14 + 0.07 * s.plateau_bias,
+        feature_px=m * 0.34,
+        feather=m * 0.020,
+        warp_px=m * 0.018 * s.naturalization,
+    )
+    b.add_detail(10 * s.detail, m * 0.040)
+    return b.finalize(center_height=1750.0, preserve_flats=True)
 
 
 def ravine_network(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(2200)
     m = min(b.h, b.w)
-    b.add_fbm(210, m * 0.22, ridged=True, octaves=4)
+    b.add_fbm(180, m * 0.26, ridged=True, octaves=4)
+    # Widen the authored trunk/branch geometry while keeping the ravine identity.
     trunk = meander_path(edge_point(b, "top", 0.42), edge_point(b, "bottom", 0.58), 14, m * 0.10 * s.naturalization, b.rng)
-    b.carve_path(trunk, depth=1300, half_width=m * 0.028, bank=m * 0.065, rim=110)
+    b.carve_path(trunk, depth=1180, half_width=m * 0.036, bank=m * 0.075, rim=95)
     for i in range(2 + int(3 * s.feature_density)):
         side = "left" if i % 2 == 0 else "right"
         start = edge_point(b, side, float(b.rng.uniform(0.15, 0.85)))
         target = trunk[int(b.rng.integers(3, len(trunk) - 3))]
         branch = meander_path(start, target, 9, m * 0.07 * s.naturalization, b.rng)
-        b.carve_path(branch, depth=950, half_width=m * 0.020, bank=m * 0.050, rim=80)
-    b.add_detail(45 * s.detail, m * 0.025)
-    return b.finalize(center_height=2600.0, preserve_flats=True)
+        b.carve_path(branch, depth=880, half_width=m * 0.026, bank=m * 0.055, rim=70)
+    # Keep explicit staging flats at the ravine mouths.
+    b.flatten_pad(b.w * 0.50, b.h * 0.12, m * 0.055, m * 0.045, target=2200, feather=m * 0.014, rectangular=True)
+    b.flatten_pad(b.w * 0.50, b.h * 0.88, m * 0.055, m * 0.045, target=2200, feather=m * 0.014, rectangular=True)
+    b.add_detail(18 * s.detail, m * 0.030)
+    return b.finalize(center_height=2350.0, preserve_flats=True)
 
 
 def mountain_basin(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(700)
     m = min(b.h, b.w)
-    b.add_fbm(850, m * 0.22, ridged=True, octaves=5)
+    # Reduce ridged fBm dominance that drove median slope to 23.1 and flat to
+    # 0.6% (authored means 7.75 and 39.5%). Keep the macro ring/basin form.
+    b.add_fbm(620, m * 0.26, ridged=True, octaves=5)
+    b.add_fbm(180, m * 0.45, ridged=False, octaves=3)
     yy, xx = np.mgrid[0:b.h, 0:b.w].astype(np.float32)
     cx, cy = b.w * 0.50, b.h * 0.52
     radius = np.sqrt(((xx - cx) / (m * 0.44)) ** 2 + ((yy - cy) / (m * 0.40)) ** 2)
-    b.a += np.exp(-0.5 * ((radius - 0.77) / 0.18) ** 2) * 720
-    b.a -= np.exp(-0.5 * (radius / 0.46) ** 2) * 520
-    b.add_random_craters(int(3 + 7 * s.feature_density), (m * 0.018, m * 0.05), 2.6, 0.7)
-    b.add_detail(80 * s.detail, m * 0.025)
+    b.a += np.exp(-0.5 * ((radius - 0.77) / 0.18) ** 2) * 620
+    b.a -= np.exp(-0.5 * (radius / 0.46) ** 2) * 420
+    # Keep a broad staging basin and a distinct highland shelf.
+    b.stamp_blob_shelf(target=380.0, area_fraction=0.16, feature_px=m * 0.36, feather=m * 0.024, warp_px=m * 0.022 * s.naturalization)
+    b.stamp_blob_shelf(target=1420.0, area_fraction=0.12, feature_px=m * 0.30, feather=m * 0.020, warp_px=m * 0.018 * s.naturalization)
+    b.add_random_craters(int(2 + 5 * s.feature_density), (m * 0.018, m * 0.05), 2.2, 0.7)
+    b.add_detail(14 * s.detail, m * 0.032)
     if s.synthetic_pads == 0:
-        b.flatten_pad(cx + m * 0.13, cy + m * 0.13, m * 0.055, m * 0.045, feather=m * 0.012, rectangular=True)
-    return b.finalize(center_height=1700.0, preserve_flats=False)
+        b.flatten_pad(cx + m * 0.13, cy + m * 0.13, m * 0.065, m * 0.050, feather=m * 0.014, rectangular=True)
+    b.flatten_pad(b.w * 0.28, b.h * 0.30, m * 0.055, m * 0.045, target=380.0, feather=m * 0.016, rectangular=False)
+    return b.finalize(center_height=1550.0, preserve_flats=True)
 
 
 def radial_badlands(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(1400)
     m = min(b.h, b.w)
-    b.add_fbm(330, m * 0.28, ridged=True, octaves=4)
+    b.add_fbm(280, m * 0.32, ridged=True, octaves=4)
+    # Add broad lowland staging without removing the radial ridge/corridor arms.
+    b.stamp_blob_shelf(target=860.0, area_fraction=0.18, feature_px=m * 0.40, feather=m * 0.026, warp_px=m * 0.020 * s.naturalization)
     cx, cy = b.w * 0.5, b.h * 0.5
     arms = 5 + int(5 * s.feature_density)
     for i in range(arms):
@@ -91,29 +133,36 @@ def radial_badlands(s: GeneratorSettings) -> HG2Map:
         end = (cx + math.cos(angle) * m * 0.68, cy + math.sin(angle) * m * 0.68)
         path = meander_path((cx, cy), end, 9, m * 0.045 * s.naturalization, b.rng)
         if i % 2:
-            b.carve_path(path, depth=420, half_width=m * 0.012, bank=m * 0.045, rim=80)
+            b.carve_path(path, depth=380, half_width=m * 0.015, bank=m * 0.045, rim=70)
         else:
-            b.add_ridge_path(path, height=430, half_width=m * 0.012, falloff=m * 0.050)
-    b.crater(cx, cy, m * 0.075, 380, 150)
-    b.add_random_craters(int(4 + 10 * s.feature_density), (m * 0.015, m * 0.038), 2.2, 0.65)
-    b.add_detail(65 * s.detail, m * 0.028)
-    return b.finalize(center_height=1900.0, preserve_flats=False)
+            b.add_ridge_path(path, height=380, half_width=m * 0.015, falloff=m * 0.050)
+    b.crater(cx, cy, m * 0.075, 320, 130)
+    b.add_random_craters(int(3 + 6 * s.feature_density), (m * 0.015, m * 0.038), 2.0, 0.60)
+    b.flatten_pad(cx + m * 0.22, cy + m * 0.05, m * 0.055, m * 0.045, target=860.0, feather=m * 0.016, rectangular=True)
+    b.add_detail(12 * s.detail, m * 0.034)
+    return b.finalize(center_height=1650.0, preserve_flats=True)
 
 
 def ridged_wastes(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(700)
     m = min(b.h, b.w)
-    b.add_fbm(520, m * 0.075, ridged=True, octaves=5)
-    b.add_fbm(260, m * 0.30, ridged=False, octaves=3)
+    # Reduce high-frequency ridged octaves that left 0.01% flat and median
+    # slope 30.9 degrees while retaining this recipe's rugged identity.
+    b.add_fbm(380, m * 0.090, ridged=True, octaves=4)
+    b.add_fbm(200, m * 0.34, ridged=False, octaves=3)
+    # Staging shelves interrupt otherwise continuous ridge walls.
+    b.stamp_blob_shelf(target=420.0, area_fraction=0.14, feature_px=m * 0.42, feather=m * 0.028, warp_px=m * 0.022 * s.naturalization)
+    b.stamp_blob_shelf(target=980.0, area_fraction=0.11, feature_px=m * 0.36, feather=m * 0.024, warp_px=m * 0.018 * s.naturalization)
     for i in range(2 + int(3 * s.feature_density)):
         if i % 2:
             start, end = edge_point(b, "left", float(b.rng.uniform(.15, .85))), edge_point(b, "right", float(b.rng.uniform(.15, .85)))
         else:
             start, end = edge_point(b, "top", float(b.rng.uniform(.15, .85))), edge_point(b, "bottom", float(b.rng.uniform(.15, .85)))
         path = meander_path(start, end, 13, m * 0.09 * s.naturalization, b.rng)
-        b.carve_path(path, depth=330, half_width=m * 0.010, bank=m * 0.025, rim=40)
-    b.add_detail(35 * s.detail, m * 0.018)
-    return b.finalize(center_height=1150.0, preserve_flats=False)
+        # Wider corridor and gentler bank retain useful breaks through the ridges.
+        b.carve_path(path, depth=280, half_width=m * 0.014, bank=m * 0.032, rim=35)
+    b.add_detail(10 * s.detail, m * 0.028)
+    return b.finalize(center_height=1100.0, preserve_flats=True)
 
 
 def serpentine_canyon(s: GeneratorSettings) -> HG2Map:
@@ -130,15 +179,19 @@ def serpentine_canyon(s: GeneratorSettings) -> HG2Map:
 def natural_badlands(s: GeneratorSettings) -> HG2Map:
     b = TerrainBuilder(s).set_level(850)
     m = min(b.h, b.w)
-    b.add_fbm(620, m * 0.16, ridged=True, octaves=5)
-    b.add_fbm(300, m * 0.42, ridged=False, octaves=4)
-    for _ in range(int(2 + 6 * s.feature_density)):
+    # The mixed authored corpus retains purposeful flats even on rugged maps;
+    # this recipe previously had effectively none.
+    b.add_fbm(480, m * 0.18, ridged=True, octaves=4)
+    b.add_fbm(220, m * 0.44, ridged=False, octaves=3)
+    b.stamp_blob_shelf(target=560.0, area_fraction=0.20, feature_px=m * 0.44, feather=m * 0.028, warp_px=m * 0.024 * s.naturalization)
+    b.stamp_blob_shelf(target=1150.0, area_fraction=0.13, feature_px=m * 0.34, feather=m * 0.022, warp_px=m * 0.018 * s.naturalization)
+    for _ in range(int(2 + 5 * s.feature_density)):
         start = edge_point(b, str(b.rng.choice(["left", "top"])), float(b.rng.uniform(.1, .9)))
         end = edge_point(b, str(b.rng.choice(["right", "bottom"])), float(b.rng.uniform(.1, .9)))
         path = meander_path(start, end, 11, m * 0.10 * s.naturalization, b.rng)
-        b.carve_path(path, depth=250, half_width=m * 0.012, bank=m * 0.035, rim=30)
-    b.add_detail(70 * s.detail, m * 0.020)
-    return b.finalize(center_height=1500.0, preserve_flats=False)
+        b.carve_path(path, depth=220, half_width=m * 0.015, bank=m * 0.038, rim=25)
+    b.add_detail(12 * s.detail, m * 0.030)
+    return b.finalize(center_height=1350.0, preserve_flats=True)
 
 
 def campaign_canyon_network(s: GeneratorSettings) -> HG2Map:

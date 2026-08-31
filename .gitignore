@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+output/
+hg2_corpus_report.json
+hg2_corpus_report.csv

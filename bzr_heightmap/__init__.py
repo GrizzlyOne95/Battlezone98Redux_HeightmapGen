@@ -1,6 +1,8 @@
-from .analysis import describe_heightmap, make_preview, terrain_metrics, traversability_metrics
+from .analysis import describe_heightmap, make_preview, make_shaded_image, terrain_metrics, traversability_metrics
 from .approved_planetary import APPROVED_PLANETARY_RECIPES
 from .contrast import apply_vertical_scale
+from .lgt import compute_lgt_lightmap, compute_lgt_for_hg2, lgt_to_brightness, read_lgt, write_lgt
+from .preview import make_hg2_height_image, make_lgt_preview_image, make_shaded_preview_fullres
 from .hg2 import (
     BZ_ZONE_WORLD_SIZE,
     DEFAULT_ZONE_BITS,
@@ -59,11 +61,20 @@ __all__ = [
     "RECIPES",
     "URBAN_RECIPES",
     "apply_vertical_scale",
+    "compute_lgt_for_hg2",
+    "compute_lgt_lightmap",
     "describe_heightmap",
     "generate",
+    "make_hg2_height_image",
+    "make_lgt_preview_image",
     "make_preview",
+    "make_shaded_image",
+    "make_shaded_preview_fullres",
+    "lgt_to_brightness",
     "random_seed",
+    "read_lgt",
     "resolve_seed",
     "terrain_metrics",
     "traversability_metrics",
+    "write_lgt",
 ]
