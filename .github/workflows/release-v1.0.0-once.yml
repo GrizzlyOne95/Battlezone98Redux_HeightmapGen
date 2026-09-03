@@ -1,0 +1,57 @@
+name: Release Heightmap Generator v1.0.0 Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/release-v1.0.0-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt pyinstaller
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Verify release version
+        shell: pwsh
+        run: |
+          $actual = python heightmap_generator.py --version
+          if ($actual -notmatch '1\.0\.0') { throw "Expected v1.0.0, got $actual" }
+
+      - name: Build Windows executable
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZR_Heightmap_Generator heightmap_generator.py
+
+      - name: Smoke test frozen executable version
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath ".\dist\BZR_Heightmap_Generator.exe" -ArgumentList "--version" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Frozen executable smoke test failed with exit code $($process.ExitCode)" }
+
+      - name: Create v1.0.0 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          target_commitish: ${{ github.sha }}
+          files: dist/BZR_Heightmap_Generator.exe
+          name: Release v1.0.0
+          body_path: docs/RELEASE_NOTES_v1.0.0.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
