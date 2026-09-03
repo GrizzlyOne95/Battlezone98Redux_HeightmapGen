@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 from bzr_heightmap import (
     GeneratorSettings,
@@ -19,9 +20,17 @@ from bzr_heightmap import (
     write_lgt,
 )
 
+APP_VERSION = "1.0.0"
+
 
 def cli() -> int:
+    # A packaged desktop build should behave like a desktop application when
+    # launched normally. Source/CLI invocations keep their existing behavior.
+    if getattr(sys, "frozen", False) and len(sys.argv) == 1:
+        sys.argv.append("--gui")
+
     parser = argparse.ArgumentParser(description="Stock/custom-inspired Battlezone 98 Redux HG2 heightmap generator")
+    parser.add_argument("--version", action="version", version=f"Battlezone98Redux Heightmap Generator {APP_VERSION}")
     parser.add_argument("--gui", action="store_true", help="open the Tkinter editor")
     parser.add_argument("--style", choices=list(RECIPES), default="Terraced Labyrinth")
     parser.add_argument("--zones", default="3x3", help="zone dimensions, e.g. 3x3 or 4x5")
