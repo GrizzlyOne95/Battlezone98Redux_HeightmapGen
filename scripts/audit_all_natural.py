@@ -49,7 +49,9 @@ def detail_profile(style: str) -> str:
     if style in hmg.STOCK_DETAIL_STYLES:
         return "stock_v5"
     if style in hmg.PLANETARY_DETAIL_STYLES:
-        return "planetary_v1"
+        return "craterland_v1"
+    if style in hmg.PLANETARY_SURFACE_STYLES:
+        return "planetary_surface_v1"
     return "raw"
 
 
@@ -138,7 +140,8 @@ def main() -> None:
         "seeds_per_style": len(SEEDS),
         "total_maps": len(rows),
         "stock_v5_styles": sorted(hmg.STOCK_DETAIL_STYLES),
-        "planetary_v1_styles": sorted(hmg.PLANETARY_DETAIL_STYLES),
+        "craterland_v1_styles": sorted(hmg.PLANETARY_DETAIL_STYLES),
+        "planetary_surface_v1_styles": sorted(hmg.PLANETARY_SURFACE_STYLES),
         "raw_styles": [style for style in STYLES if detail_profile(style) == "raw"],
         "groups": groups,
         "style_medians": medians,
