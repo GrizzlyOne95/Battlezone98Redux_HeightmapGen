@@ -29,9 +29,14 @@ from .hgt import (
     upsample,
     zone_count_candidates,
 )
+from .natural_finish import NATURAL_FINISH_STYLES, enhance_natural_finish
 from .planetary import PLANETARY_RECIPES
+from .planetary_detail import PLANETARY_DETAIL_STYLES, enhance_planetary_terrain
+from .planetary_surface import PLANETARY_SURFACE_STYLES, enhance_planetary_surface
 from .recipes import RECIPES as CORE_RECIPES, generate as generate_core
 from .settings import GeneratorSettings, RANDOM_SEED_MAX, random_seed, resolve_seed
+from .stock_detail import STOCK_DETAIL_STYLES, stock_connectivity_metrics
+from .stock_detail_v5 import enhance_stock_terrain
 from .urban import URBAN_RECIPES
 
 RECIPES = {
@@ -56,6 +61,14 @@ def generate(style: str, settings: GeneratorSettings) -> HG2Map:
                 terrain = planetary(settings)
             else:
                 terrain = generate_core(style, settings)
+                if style in STOCK_DETAIL_STYLES:
+                    terrain = enhance_stock_terrain(terrain, settings, style)
+        if style in PLANETARY_DETAIL_STYLES:
+            terrain = enhance_planetary_terrain(terrain, settings, style)
+        if style in PLANETARY_SURFACE_STYLES:
+            terrain = enhance_planetary_surface(terrain, settings, style)
+        if style in NATURAL_FINISH_STYLES:
+            terrain = enhance_natural_finish(terrain, settings, style)
     return apply_vertical_scale(terrain, settings.vertical_scale)
 
 
@@ -79,14 +92,22 @@ __all__ = [
     "HG2_STORAGE_MAX_HEIGHT",
     "HG2_STRUCTURE_VERSION",
     "HG2Map",
+    "NATURAL_FINISH_STYLES",
+    "PLANETARY_DETAIL_STYLES",
+    "PLANETARY_SURFACE_STYLES",
     "PLANETARY_RECIPES",
     "RECIPES",
+    "STOCK_DETAIL_STYLES",
     "URBAN_RECIPES",
     "apply_vertical_scale",
     "box_blur",
     "compute_lgt_for_hg2",
     "compute_lgt_lightmap",
     "describe_heightmap",
+    "enhance_natural_finish",
+    "enhance_planetary_surface",
+    "enhance_planetary_terrain",
+    "enhance_stock_terrain",
     "find_trn",
     "generate",
     "make_hg2_height_image",
@@ -100,6 +121,7 @@ __all__ = [
     "read_trn_zone_counts",
     "read_lgt",
     "resolve_seed",
+    "stock_connectivity_metrics",
     "terrain_metrics",
     "upsample",
     "traversability_metrics",

@@ -1,0 +1,35 @@
+name: Stock Detail Audit
+
+on:
+  push:
+    branches: [ research/stock-detail-grammar ]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Generate fresh 24-map stock-detail audit
+        run: PYTHONPATH=. python scripts/audit_stock_detail.py
+      - name: Generate 60-map all-natural audit
+        run: PYTHONPATH=. python scripts/audit_all_natural.py
+      - name: Upload stock-detail audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-detail-audit
+          path: stock_detail_audit
+      - name: Upload all-natural audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-natural-audit
+          path: all_natural_audit
