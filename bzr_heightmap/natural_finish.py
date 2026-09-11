@@ -76,6 +76,24 @@ def _scaled(base: int, area: int, density: float) -> int:
     return max(1, int(round(float(base) * area_scale * density_scale)))
 
 
+def _apply_symmetry(a: np.ndarray, mode: str) -> None:
+    """Reapply user-requested symmetry after the post-generation detail pass."""
+    mode = (mode or "None").lower()
+    h, w = a.shape
+    if mode == "mirror x":
+        left = a[:, : (w + 1) // 2].copy()
+        a[:, w // 2 :] = np.fliplr(left[:, : w - w // 2])
+    elif mode == "mirror z":
+        top = a[: (h + 1) // 2, :].copy()
+        a[h // 2 :, :] = np.flipud(top[: h - h // 2, :])
+    elif mode == "2-way rotational":
+        top = a[: (h + 1) // 2, :].copy()
+        a[h // 2 :, :] = np.flipud(np.fliplr(top[: h - h // 2, :]))
+    elif mode == "4-way":
+        _apply_symmetry(a, "mirror x")
+        _apply_symmetry(a, "mirror z")
+
+
 def enhance_natural_finish(terrain: HG2Map, settings: GeneratorSettings, style: str) -> HG2Map:
     profile = NATURAL_FINISH_PROFILES.get(style)
     if profile is None:
@@ -161,6 +179,7 @@ def enhance_natural_finish(terrain: HG2Map, settings: GeneratorSettings, style: 
             float(rng.uniform(0.0, math.tau)),
         )
 
+    _apply_symmetry(a, settings.symmetry)
     heights = np.clip(np.rint(a), 0, HG2_SAFE_MAX_HEIGHT).astype(np.uint16)
     return HG2Map(
         heights,
