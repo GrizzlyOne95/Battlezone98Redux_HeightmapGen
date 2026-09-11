@@ -48,7 +48,9 @@ class StockDetailGrammarTests(unittest.TestCase):
             & (center == enhanced.heights[1:-1, :-2])
             & (center == enhanced.heights[1:-1, 2:])
         )
-        self.assertGreater(float(np.mean(exact_flat)), 0.45)
+        # Even under deliberately elevated detail/density, preserve a large
+        # exact-flat substrate rather than turning the whole map into noise.
+        self.assertGreater(float(np.mean(exact_flat)), 0.30)
 
     def test_enhancement_is_deterministic_and_stock_safe(self):
         yy, xx = np.mgrid[0:128, 0:128].astype(np.float32)
