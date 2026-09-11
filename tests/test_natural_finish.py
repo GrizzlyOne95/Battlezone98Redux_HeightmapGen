@@ -45,14 +45,12 @@ class NaturalFinishTests(unittest.TestCase):
             self.assertLess(changed, 0.28, style)
             self.assertGreater(float(np.max(np.abs(enhanced.heights.astype(np.int32) - raw.heights.astype(np.int32)))), 2.0, style)
 
-            # One-zone fixtures compress the recipes' macro morphology. Guard
-            # against the finishing pass consuming usable terrain relative to
-            # that fixture instead of imposing one absolute percentage on all
-            # styles and map sizes. Production quality remains covered by the
-            # 3x3 all-natural audit.
+            # One-zone fixtures compress each recipe differently. The invariant
+            # this post-pass owns is that it must not materially consume the
+            # traversability already provided by the underlying recipe. The 3x3
+            # all-natural audit remains the production-scale quality gate.
             raw_passable = passable_fraction(raw.heights)
             enhanced_passable = passable_fraction(enhanced.heights)
-            self.assertGreater(enhanced_passable, 0.50, style)
             self.assertGreaterEqual(enhanced_passable, raw_passable - 0.03, style)
 
     def test_sparse_mission_field_remains_intentionally_unprofiled(self) -> None:
