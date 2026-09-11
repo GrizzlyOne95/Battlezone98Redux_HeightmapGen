@@ -32,6 +32,7 @@ from .hgt import (
 from .planetary import PLANETARY_RECIPES
 from .recipes import RECIPES as CORE_RECIPES, generate as generate_core
 from .settings import GeneratorSettings, RANDOM_SEED_MAX, random_seed, resolve_seed
+from .stock_detail import STOCK_DETAIL_STYLES, enhance_stock_terrain, stock_connectivity_metrics
 from .urban import URBAN_RECIPES
 
 RECIPES = {
@@ -56,6 +57,8 @@ def generate(style: str, settings: GeneratorSettings) -> HG2Map:
                 terrain = planetary(settings)
             else:
                 terrain = generate_core(style, settings)
+                if style in STOCK_DETAIL_STYLES:
+                    terrain = enhance_stock_terrain(terrain, settings, style)
     return apply_vertical_scale(terrain, settings.vertical_scale)
 
 
@@ -81,12 +84,14 @@ __all__ = [
     "HG2Map",
     "PLANETARY_RECIPES",
     "RECIPES",
+    "STOCK_DETAIL_STYLES",
     "URBAN_RECIPES",
     "apply_vertical_scale",
     "box_blur",
     "compute_lgt_for_hg2",
     "compute_lgt_lightmap",
     "describe_heightmap",
+    "enhance_stock_terrain",
     "find_trn",
     "generate",
     "make_hg2_height_image",
@@ -100,6 +105,7 @@ __all__ = [
     "read_trn_zone_counts",
     "read_lgt",
     "resolve_seed",
+    "stock_connectivity_metrics",
     "terrain_metrics",
     "upsample",
     "traversability_metrics",
