@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 
 HG2_STORAGE_MASK = 0x1FFF
+HG2_STORAGE_MAX_HEIGHT = HG2_STORAGE_MASK
 HG2_SAFE_MAX_HEIGHT = 0x0FFF
 HG2_HEIGHT_MASK = HG2_STORAGE_MASK
 HG2_MAX_HEIGHT = HG2_SAFE_MAX_HEIGHT
@@ -39,11 +40,21 @@ class HG2Map:
     def world_size(self) -> Tuple[float, float]:
         return self.zones_x * BZ_ZONE_WORLD_SIZE, self.zones_z * BZ_ZONE_WORLD_SIZE
 
-    def validate(self) -> None:
+    def _validate_shape(self) -> None:
         if self.heights.shape != self.shape:
             raise ValueError(f"Height shape {self.heights.shape} does not match HG2 dimensions {self.shape}")
-        if np.min(self.heights) < 0 or np.max(self.heights) > HG2_MAX_HEIGHT:
-            raise ValueError(f"Generated HG2 height samples must be 0..{HG2_MAX_HEIGHT}")
+
+    def validate(self) -> None:
+        """Validate generated terrain against the stock authoring-safe height range."""
+        self._validate_shape()
+        if np.min(self.heights) < 0 or np.max(self.heights) > HG2_SAFE_MAX_HEIGHT:
+            raise ValueError(f"Generated HG2 height samples must be 0..{HG2_SAFE_MAX_HEIGHT}")
+
+    def validate_storage(self) -> None:
+        """Validate data for lossless HG2 codec operations across the full 13-bit range."""
+        self._validate_shape()
+        if np.min(self.heights) < 0 or np.max(self.heights) > HG2_STORAGE_MAX_HEIGHT:
+            raise ValueError(f"HG2 storage samples must be 0..{HG2_STORAGE_MAX_HEIGHT}")
 
     @classmethod
     def read(cls, path: os.PathLike | str) -> "HG2Map":
@@ -71,8 +82,8 @@ class HG2Map:
         return cls(full, zones_x, zones_z, zone_bits, structure_version, map_version)
 
     def write(self, path: os.PathLike | str) -> None:
-        self.validate()
-        heights = np.clip(np.rint(self.heights), 0, HG2_MAX_HEIGHT).astype("<u2") & HG2_STORAGE_MASK
+        self.validate_storage()
+        heights = np.clip(np.rint(self.heights), 0, HG2_STORAGE_MAX_HEIGHT).astype("<u2") & HG2_STORAGE_MASK
         with open(path, "wb") as stream:
             stream.write(
                 struct.pack(
@@ -92,5 +103,7 @@ class HG2Map:
                     stream.write(zone.astype("<u2", copy=False).tobytes(order="C"))
 
     def write_png16(self, path: os.PathLike | str) -> None:
-        scaled = (np.clip(self.heights, 0, HG2_MAX_HEIGHT).astype(np.uint32) * 16).astype(np.uint16)
+        """Write a lossless 16-bit interchange PNG for the full 13-bit HG2 range."""
+        self.validate_storage()
+        scaled = (np.clip(self.heights, 0, HG2_STORAGE_MAX_HEIGHT).astype(np.uint32) * 8).astype(np.uint16)
         Image.fromarray(scaled, mode="I;16").save(path)
