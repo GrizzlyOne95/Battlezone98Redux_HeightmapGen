@@ -29,6 +29,7 @@ from .hgt import (
     upsample,
     zone_count_candidates,
 )
+from .natural_finish import NATURAL_FINISH_STYLES, enhance_natural_finish
 from .planetary import PLANETARY_RECIPES
 from .planetary_detail import PLANETARY_DETAIL_STYLES, enhance_planetary_terrain
 from .planetary_surface import PLANETARY_SURFACE_STYLES, enhance_planetary_surface
@@ -66,6 +67,8 @@ def generate(style: str, settings: GeneratorSettings) -> HG2Map:
             terrain = enhance_planetary_terrain(terrain, settings, style)
         if style in PLANETARY_SURFACE_STYLES:
             terrain = enhance_planetary_surface(terrain, settings, style)
+        if style in NATURAL_FINISH_STYLES:
+            terrain = enhance_natural_finish(terrain, settings, style)
     return apply_vertical_scale(terrain, settings.vertical_scale)
 
 
@@ -89,6 +92,7 @@ __all__ = [
     "HG2_STORAGE_MAX_HEIGHT",
     "HG2_STRUCTURE_VERSION",
     "HG2Map",
+    "NATURAL_FINISH_STYLES",
     "PLANETARY_DETAIL_STYLES",
     "PLANETARY_SURFACE_STYLES",
     "PLANETARY_RECIPES",
@@ -100,6 +104,7 @@ __all__ = [
     "compute_lgt_for_hg2",
     "compute_lgt_lightmap",
     "describe_heightmap",
+    "enhance_natural_finish",
     "enhance_planetary_surface",
     "enhance_planetary_terrain",
     "enhance_stock_terrain",
