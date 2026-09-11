@@ -33,7 +33,7 @@ from .planetary import PLANETARY_RECIPES
 from .recipes import RECIPES as CORE_RECIPES, generate as generate_core
 from .settings import GeneratorSettings, RANDOM_SEED_MAX, random_seed, resolve_seed
 from .stock_detail import STOCK_DETAIL_STYLES, stock_connectivity_metrics
-from .stock_detail_v4 import enhance_stock_terrain
+from .stock_detail_v5 import enhance_stock_terrain
 from .urban import URBAN_RECIPES
 
 RECIPES = {
