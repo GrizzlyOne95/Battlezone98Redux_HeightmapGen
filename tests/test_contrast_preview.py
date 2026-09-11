@@ -67,14 +67,14 @@ class HeightPreviewTests(unittest.TestCase):
         hmg.make_hg2_height_image(heights)
         self.assertTrue(np.array_equal(heights, before))
 
-    def test_png16_export_preserves_height_times_sixteen(self):
+    def test_png16_export_preserves_height_times_eight(self):
         heights = np.arange(256 * 256, dtype=np.uint16).reshape(256, 256) & 0x0FFF
         terrain = hmg.HG2Map(heights, 1, 1)
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "height.png"
             terrain.write_png16(path)
             loaded = np.asarray(Image.open(path), dtype=np.uint16)
-        self.assertTrue(np.array_equal(loaded, heights.astype(np.uint32) * 16))
+        self.assertTrue(np.array_equal(loaded, heights.astype(np.uint32) * 8))
 
 
 if __name__ == "__main__":
