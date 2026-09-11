@@ -80,10 +80,10 @@ HG2 I/O follows the same layout/indexing used by `BZMapIO.py` and the Redux Worl
 - 12-byte header: structure version, zone bits, map width/depth in zones, map version
 - zone-major height payload
 - normal Redux maps use `zone_bits = 8`, or 256x256 samples per 1280-unit zone
-- the reader preserves the 13-bit storage mask (`0x1FFF`) for compatibility
-- generated/exported terrain defaults to the stock authoring-safe `0..4095` height range (`0..409.5` world units)
+- the codec preserves the full 13-bit storage mask (`0x1FFF`, or `0..8191`) for compatibility
+- newly generated terrain defaults to the stock authoring-safe `0..4095` height range (`0..409.5` world units)
 
-The generator can also export a lossless 16-bit PNG representation.
+The generator can also export a lossless 16-bit PNG representation using the shared WorldBuilder convention `PNG16 = HG2 height × 8`, which preserves the complete `0..8191` HG2 storage range.
 
 Reference implementation for HG2/world tooling: [Battlezone98Redux_WorldBuilder](https://github.com/GrizzlyOne95/Battlezone98Redux_WorldBuilder)
 
@@ -105,7 +105,7 @@ The GUI provides live terrain tuning with a responsive preview area (tabbed **HG
 
 Previews:
 
-- **HG2 Height** — raw BZ height field with a fixed `0..4095 → 0..255` mapping (no percentile renormalization). Changing terrain contrast visibly changes this view because it changes actual heights, not display brightness. Exact-authored flats remain exact. Lossless 16-bit PNG export preserves heights (`height ×16`).
+- **HG2 Height** — raw BZ height field with a fixed `0..4095 → 0..255` mapping (no percentile renormalization). Changing terrain contrast visibly changes this view because it changes actual heights, not display brightness. Exact-authored flats remain exact. Lossless 16-bit PNG export preserves HG2 storage values with `height ×8`.
 - **LGT Lighting** — live BZ LGT-style lighting derived from the current terrain (slope normals + NW sun 315°/45° + 25% ambient floor, per `format_lgt.html`). It approximates what the game emphasizes (ridges, basins, slope facing). Arrays use the HG2/LGT south-first file convention; this is equivalent to Z64Tools flipping a conventional north-at-top PNG before zoning. A preview is not automatically an engine-valid `.LGT` export; the experimental `.LGT` exporter is provided but not claimed as game-tested.
 - **Shaded** — legacy combined elevation + hillshade view retained for quick readability.
 
@@ -197,7 +197,7 @@ Urban terrain follows the same rule: city structure is subordinate to Battlezone
 
 ## Validation
 
-The HG2 reader/writer has been round-trip checked against stock and custom maps and remains deterministic for a fixed seed (clamped to the stock-safe `0..4095` range). The controlled scan found **509 paths: 507 valid + 2 invalid = 275 unique contents + 232 duplicate copies**. The disjoint unique classification is **249 authored + 26 HeightmapGen samples + 0 synthetic-only = 275**. Separately, 23 synthetic/test paths collapse to one flat hash that is already represented by two authored map paths. See `docs/HG2_CORPUS_ANALYSIS_20260828.md`; the old “55 references” claim has been superseded.
+The HG2 reader/writer has been round-trip checked against stock and custom maps and remains deterministic for a fixed seed. Codec operations preserve the full `0..8191` 13-bit HG2 storage range, while newly generated terrain remains clamped to the stock-safe `0..4095` authoring range. The controlled scan found **509 paths: 507 valid + 2 invalid = 275 unique contents + 232 duplicate copies**. The disjoint unique classification is **249 authored + 26 HeightmapGen samples + 0 synthetic-only = 275**. Separately, 23 synthetic/test paths collapse to one flat hash that is already represented by two authored map paths. See `docs/HG2_CORPUS_ANALYSIS_20260828.md`; the old “55 references” claim has been superseded.
 
 - **HG2 stores the actual terrain heights.** Lowering **Terrain Contrast / Vertical Relief** scales heights around the median (e.g., 0.75 keeps 75% of differences) and makes slopes less severe without spatially blurring authored terrain; exact flats stay exact.
 - **LGT preview represents terrain lighting, not height.** An LGT preview is not automatically equivalent to an engine-valid `.LGT` export unless verified; the preview approximates slope normals + sun + 25% ambient, and the optional `.LGT` writer uses the bordered Redux layout validated against on-disk sizes.
