@@ -28,9 +28,9 @@ class PlanetaryDetailProfile:
 PLANETARY_DETAIL_PROFILES: dict[str, PlanetaryDetailProfile] = {
     # Native HG2 scale: 1 sample = 5 world units. These profiles deliberately
     # concentrate 10-80 m features into otherwise broad, traversable plains.
-    "Lunar Catena": PlanetaryDetailProfile(150, 24, 54, 30, 0.24, 13.0),
-    "Callisto Craterlands": PlanetaryDetailProfile(180, 34, 44, 42, 0.28, 15.0),
-    "Walled Crater Basin": PlanetaryDetailProfile(120, 24, 48, 28, 0.20, 12.0),
+    "Lunar Catena": PlanetaryDetailProfile(150, 24, 54, 30, 0.21, 9.0),
+    "Callisto Craterlands": PlanetaryDetailProfile(180, 34, 44, 42, 0.24, 10.0),
+    "Walled Crater Basin": PlanetaryDetailProfile(120, 24, 48, 28, 0.18, 8.0),
 }
 
 PLANETARY_DETAIL_STYLES = frozenset(PLANETARY_DETAIL_PROFILES)
@@ -162,25 +162,25 @@ def _add_patchy_surface(
     coverage: float,
     amplitude: float,
 ) -> None:
-    # A 1-3 sample high-pass surface is below the broad fBm scale used by the
-    # recipes, but remains physically representable by the native HG2 mesh.
+    # Keep this broader than one-sample noise: the detail should read as low
+    # hummocky ground in Blender/game space rather than numerical stipple.
     white = rng.normal(0.0, 1.0, a.shape).astype(np.float32)
-    fine = ndimage.gaussian_filter(white, 0.70, mode="reflect")
-    fine -= ndimage.gaussian_filter(fine, 3.0, mode="reflect")
+    fine = ndimage.gaussian_filter(white, 1.15, mode="reflect")
+    fine -= ndimage.gaussian_filter(fine, 4.0, mode="reflect")
     std = max(float(np.std(fine)), 1e-5)
     fine /= std
 
     m = min(a.shape)
     field = ndimage.gaussian_filter(
         rng.normal(0.0, 1.0, a.shape).astype(np.float32),
-        max(m * 0.035, 4.0),
+        max(m * 0.040, 5.0),
         mode="reflect",
     )
     threshold = float(np.quantile(field, np.clip(1.0 - coverage, 0.05, 0.95)))
-    patch = ndimage.gaussian_filter((field >= threshold).astype(np.float32), 3.0, mode="reflect")
+    patch = ndimage.gaussian_filter((field >= threshold).astype(np.float32), 5.0, mode="reflect")
 
     gentle = (_slope_degrees(ndimage.gaussian_filter(a, 1.5)) <= 14.0).astype(np.float32)
-    gentle = ndimage.gaussian_filter(gentle, 2.5, mode="reflect")
+    gentle = ndimage.gaussian_filter(gentle, 3.0, mode="reflect")
     mask = np.clip(patch * gentle, 0.0, 1.0)
     a += fine * mask * float(amplitude)
 
