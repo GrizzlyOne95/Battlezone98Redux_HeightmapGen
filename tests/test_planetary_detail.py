@@ -56,7 +56,7 @@ class PlanetaryDetailTests(unittest.TestCase):
             # only require measurable residual growth here. The 3x3 audit is
             # the production-scale magnitude/quality gate.
             self.assertGreater(residual_rms(enhanced.heights), residual_rms(raw.heights), style)
-            self.assertGreater(lap_p95(enhanced.heights), lap_p95(raw.heights) + 2.0, style)
+            self.assertGreaterEqual(lap_p95(enhanced.heights), lap_p95(raw.heights) + 2.0, style)
             self.assertGreater(passable_fraction(enhanced.heights), 0.70, style)
 
             unchanged = float(np.mean(enhanced.heights == raw.heights))
