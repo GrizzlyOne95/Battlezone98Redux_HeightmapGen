@@ -45,6 +45,14 @@ def style_group(style: str) -> str:
     return "planetary" if style in PLANETARY_STYLES else "core"
 
 
+def detail_profile(style: str) -> str:
+    if style in hmg.STOCK_DETAIL_STYLES:
+        return "stock_v5"
+    if style in hmg.PLANETARY_DETAIL_STYLES:
+        return "planetary_v1"
+    return "raw"
+
+
 def median_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     numeric = [
         "min_height",
@@ -66,7 +74,7 @@ def median_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
         entry: dict[str, object] = {
             "style": style,
             "group": style_group(style),
-            "v5_profiled": style in hmg.STOCK_DETAIL_STYLES,
+            "detail_profile": detail_profile(style),
             "n": len(subset),
         }
         for key in numeric:
@@ -81,7 +89,7 @@ def main() -> None:
     hg2_dir.mkdir(parents=True, exist_ok=True)
 
     rows: list[dict[str, object]] = []
-    cards: list[tuple[str, int, Image.Image, bool]] = []
+    cards: list[tuple[str, int, Image.Image, str]] = []
 
     for style in STYLES:
         if style not in hmg.RECIPES:
@@ -97,7 +105,7 @@ def main() -> None:
             row: dict[str, object] = {
                 "style": style,
                 "group": style_group(style),
-                "v5_profiled": style in hmg.STOCK_DETAIL_STYLES,
+                "detail_profile": detail_profile(style),
                 "seed": seed,
                 "min_height": int(np.min(heights)),
                 "max_height": int(np.max(heights)),
@@ -106,7 +114,7 @@ def main() -> None:
             }
             row.update(metrics(heights))
             rows.append(row)
-            cards.append((style, seed, preview_image(heights), style in hmg.STOCK_DETAIL_STYLES))
+            cards.append((style, seed, preview_image(heights), detail_profile(style)))
 
     medians = median_rows(rows)
     groups: dict[str, dict[str, float]] = {}
@@ -129,8 +137,9 @@ def main() -> None:
         "styles": len(STYLES),
         "seeds_per_style": len(SEEDS),
         "total_maps": len(rows),
-        "v5_profiled_styles": sorted(hmg.STOCK_DETAIL_STYLES),
-        "unprofiled_styles": [style for style in STYLES if style not in hmg.STOCK_DETAIL_STYLES],
+        "stock_v5_styles": sorted(hmg.STOCK_DETAIL_STYLES),
+        "planetary_v1_styles": sorted(hmg.PLANETARY_DETAIL_STYLES),
+        "raw_styles": [style for style in STYLES if detail_profile(style) == "raw"],
         "groups": groups,
         "style_medians": medians,
     }
@@ -148,12 +157,11 @@ def main() -> None:
     sheet = Image.new("RGB", (cols * card_w, rows_n * card_h), "white")
     draw = ImageDraw.Draw(sheet)
     font = ImageFont.load_default()
-    for i, (style, seed, img, profiled) in enumerate(cards):
+    for i, (style, seed, img, profile) in enumerate(cards):
         x = (i % cols) * card_w
         y = (i // cols) * card_h
         sheet.paste(img, (x + 10, y + 10))
-        tag = "V5" if profiled else "raw recipe"
-        draw.text((x + 10, y + 314), f"{style} [{tag}]", fill="black", font=font)
+        draw.text((x + 10, y + 314), f"{style} [{profile}]", fill="black", font=font)
         draw.text((x + 10, y + 328), f"seed {seed}", fill="black", font=font)
     sheet.save(out / "fresh_contact_sheet.png")
 
