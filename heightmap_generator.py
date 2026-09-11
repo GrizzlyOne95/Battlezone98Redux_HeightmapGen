@@ -20,7 +20,7 @@ from bzr_heightmap import (
     write_lgt,
 )
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 
 def cli() -> int:
