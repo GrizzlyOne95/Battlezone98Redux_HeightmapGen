@@ -35,8 +35,11 @@ jobs:
             throw "Version mismatch: tag=$expected output=$actual"
           }
 
+      - name: Generate application icon
+        run: python scripts/generate_app_icon.py branding/repo_icon.svg bzr_heightmap.ico
+
       - name: Build Windows executable
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZR_Heightmap_Generator heightmap_generator.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZR_Heightmap_Generator --icon bzr_heightmap.ico --add-data "bzr_heightmap.ico;." heightmap_generator.py
 
       - name: Smoke test frozen executable version
         shell: pwsh
