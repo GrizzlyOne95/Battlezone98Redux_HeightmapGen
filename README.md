@@ -4,6 +4,27 @@ Experimental Battlezone 98 Redux terrain generator built around the terrain gram
 
 The goal is **not** to generate generic Perlin-noise terrain. Battlezone maps frequently depend on large exact-height shelves, readable corridors, ravines, crater rims, staging basins, escarpments, synthetic pads, and deliberately controlled transition bands. This tool treats those as first-class terrain primitives and then applies naturalization/detail selectively.
 
+## Terrain examples
+
+These are real generated outputs checked into the repository, not concept art. They show the range from mission-oriented canyon and basin layouts to strong authored landforms and dense urban substrate terrain. The underlying HG2 samples can be regenerated from fixed seeds where listed in `samples/manifest.json`.
+
+<table>
+  <tr>
+    <td align="center"><strong>Campaign Canyon Network</strong><br><img src="samples/previews/campaign_canyon_preview.png" width="420" alt="Campaign Canyon Network generated terrain"></td>
+    <td align="center"><strong>Cratered Divide</strong><br><img src="samples/previews/cratered_divide_preview.png" width="420" alt="Cratered Divide generated terrain"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Mountain Basin</strong><br><img src="samples/previews/mountain_basin_preview.png" width="420" alt="Mountain Basin generated terrain"></td>
+    <td align="center"><strong>Escarpment Stronghold</strong><br><img src="samples/previews/escarpment_stronghold_preview.png" width="420" alt="Escarpment Stronghold generated terrain"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Cyberpunk Megacity — terrain</strong><br><img src="samples/previews/cyberpunk_megacity_8x8_preview.png" width="420" alt="Cyberpunk Megacity generated terrain"></td>
+    <td align="center"><strong>Cyberpunk Megacity — painted preview</strong><br><img src="samples/previews/cyberpunk_megacity_8x8_painted.png" width="420" alt="Cyberpunk Megacity painted terrain preview"></td>
+  </tr>
+</table>
+
+The generator is intended to create **playable terrain structure**, not just visually noisy heightfields: canyon routes, staging shelves, crater basins, ramps, objective pads, escarpments, plazas, streets, and other large forms remain explicit parts of generation and can then be naturalized around their gameplay geometry.
+
 ## Current terrain styles
 
 Core Battlezone-derived styles:
@@ -59,7 +80,11 @@ Each sample includes:
 - a lossless 16-bit height PNG under `samples/height_png/`
 - exact generation parameters in `samples/manifest.json` and `samples/manifest.csv`
 
-`samples/preview_contact_sheet.png` provides a single visual overview of the checked-in set. The corpus can be reproduced with:
+### Sample contact sheet
+
+[![Generated terrain sample contact sheet](samples/preview_contact_sheet.png)](samples/preview_contact_sheet.png)
+
+The contact sheet provides a single visual overview of the checked-in baseline set. The corpus can be reproduced with:
 
 ```bash
 python scripts/generate_samples.py
