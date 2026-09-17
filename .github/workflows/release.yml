@@ -38,19 +38,30 @@ jobs:
       - name: Generate application icon
         run: python scripts/generate_app_icon.py branding/repo_icon.svg bzr_heightmap.ico --png branding/app_icon.png
 
+      - name: Generate Windows version metadata
+        run: python scripts/generate_version_info.py --version "${{ github.ref_name }}" --output branding/version_info.txt
+
       - name: Build Windows executable
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZR_Heightmap_Generator --icon bzr_heightmap.ico --add-data "bzr_heightmap.ico;." --add-data "branding/app_icon.png;branding" --add-data "branding/app_icon.ico;branding" --runtime-hook branding/pyinstaller_icon_hook.py heightmap_generator.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZHeightmapGenerator --icon bzr_heightmap.ico --version-file branding/version_info.txt --add-data "bzr_heightmap.ico;." --add-data "branding/app_icon.png;branding" --add-data "branding/app_icon.ico;branding" --runtime-hook branding/pyinstaller_icon_hook.py heightmap_generator.py
 
       - name: Smoke test frozen executable version
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath ".\dist\BZR_Heightmap_Generator.exe" -ArgumentList "--version" -Wait -PassThru
+          $process = Start-Process -FilePath ".\dist\BZHeightmapGenerator.exe" -ArgumentList "--version" -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "Frozen executable version smoke test failed with exit code $($process.ExitCode)" }
+
+      - name: Package Windows release archive
+        shell: pwsh
+        run: |
+          $archive = "Battlezone98Redux_HeightmapGen-${env:GITHUB_REF_NAME}-windows.zip"
+          Compress-Archive -Path ".\dist\BZHeightmapGenerator.exe" -DestinationPath ".\dist\$archive" -Force
+          Get-Item ".\dist\$archive"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/BZR_Heightmap_Generator.exe
+          files: dist/Battlezone98Redux_HeightmapGen-v*-windows.zip
+          fail_on_unmatched_files: true
           name: Release ${{ github.ref_name }}
           body_path: docs/RELEASE_NOTES_${{ github.ref_name }}.md
           draft: false
