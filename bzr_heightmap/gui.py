@@ -21,12 +21,71 @@ from .preview import make_hg2_height_image, make_lgt_preview_image, make_shaded_
 from . import RECIPES, generate
 from .settings import GeneratorSettings, random_seed
 
+APP_USER_MODEL_ID = "GrizzlyOne95.Battlezone98Redux.HeightmapGen"
+
+
+def _set_app_user_model_id() -> None:
+    import sys
+
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
+    except Exception:
+        pass
+
+
+def _resolve_bundled_icon(name: str):
+    import os
+    import sys
+
+    candidates = []
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(os.path.join(meipass, "branding", name))
+        candidates.append(os.path.join(meipass, name))
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates.append(os.path.join(os.path.dirname(here), "branding", name))
+    candidates.append(os.path.join(here, "branding", name))
+    candidates.append(os.path.join(os.path.dirname(here), name))
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    return None
+
+
+def apply_window_icon(window) -> None:
+    """Apply the canonical app icon to a Tk/Toplevel window."""
+    try:
+        ico_path = _resolve_bundled_icon("app_icon.ico") or _resolve_bundled_icon("bzr_heightmap.ico")
+        if ico_path:
+            try:
+                window.iconbitmap(ico_path)
+            except Exception:
+                pass
+        png_path = _resolve_bundled_icon("app_icon.png")
+        if png_path:
+            try:
+                import tkinter as tk
+
+                image = tk.PhotoImage(file=png_path)
+                window.iconphoto(True, image)
+                window._battlezone_app_icon = image
+            except Exception:
+                pass
+    except Exception:
+        pass
+
 
 def run_gui() -> None:
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
 
+    _set_app_user_model_id()
     root = tk.Tk()
+    apply_window_icon(root)
     root.title("BZR Heightmap Generator — Live HG2 / LGT Preview")
     root.geometry("1380x920")
     root.configure(bg="#0a0a0a")

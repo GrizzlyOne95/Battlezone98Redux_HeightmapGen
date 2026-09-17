@@ -36,10 +36,10 @@ jobs:
           }
 
       - name: Generate application icon
-        run: python scripts/generate_app_icon.py branding/repo_icon.svg bzr_heightmap.ico
+        run: python scripts/generate_app_icon.py branding/repo_icon.svg bzr_heightmap.ico --png branding/app_icon.png
 
       - name: Build Windows executable
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZR_Heightmap_Generator --icon bzr_heightmap.ico --add-data "bzr_heightmap.ico;." heightmap_generator.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name BZR_Heightmap_Generator --icon bzr_heightmap.ico --add-data "bzr_heightmap.ico;." --add-data "branding/app_icon.png;branding" --add-data "branding/app_icon.ico;branding" --runtime-hook branding/pyinstaller_icon_hook.py heightmap_generator.py
 
       - name: Smoke test frozen executable version
         shell: pwsh
