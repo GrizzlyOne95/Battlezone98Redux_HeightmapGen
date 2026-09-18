@@ -20,7 +20,7 @@ from bzr_heightmap import (
     write_lgt,
 )
 
-APP_VERSION = "1.0.2"
+APP_VERSION = Path(__file__).with_name("VERSION").read_text(encoding="utf-8").strip()
 
 
 def cli() -> int:
